@@ -11,7 +11,7 @@ import '@/assets/styles.scss';
 import '@/assets/tailwind.css';
 
 const app = createApp(App);
-
+// Enrutador, permite el manejo de rutas
 app.use(router);
 app.use(PrimeVue, {
     theme: {

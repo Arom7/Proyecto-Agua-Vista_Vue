@@ -1,4 +1,5 @@
 import AppLayout from '@/layout/AppLayout.vue';
+import Landing from '@/views/pages/Landing.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
 const router = createRouter({
@@ -6,6 +7,11 @@ const router = createRouter({
     routes: [
         {
             path: '/',
+            name: 'landing',
+            component: Landing
+        },
+        {
+            path: '/layout',
             component: AppLayout,
             children: [
                 {
@@ -105,11 +111,6 @@ const router = createRouter({
                     component: () => import('@/views/pages/Documentation.vue')
                 }
             ]
-        },
-        {
-            path: '/landing',
-            name: 'landing',
-            component: () => import('@/views/pages/Landing.vue')
         },
         {
             path: '/pages/notfound',
