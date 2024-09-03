@@ -11,8 +11,8 @@ const model = ref([
     {
         label: 'Menu',
         items: [
-            { label: 'Lista de socios', icon: 'pi pi-fw pi-id-card', to: '/uikit/list' },
-            { label: 'Lecturacion de recibos', icon: 'pi pi-fw pi-align-justify', to: '/pages/crud' },
+            { label: 'Lista de socios', icon: 'pi pi-fw pi-id-card', to: '/lista/socios' },
+            { label: 'Lecturacion de recibos', icon: 'pi pi-fw pi-align-justify', to: '/pages/lecturaRecibos' },
             { label: 'Multas', icon: 'pi pi-fw pi-dollar', to: '/pages/crud' },
             { label: 'Reporte de pagos', icon: 'pi pi-fw pi-file-pdf', to: '/uikit/formlayout' },
             { label: 'Reporte de deudas', icon: 'pi pi-fw pi-file-pdf', to: '/uikit/formlayout' },

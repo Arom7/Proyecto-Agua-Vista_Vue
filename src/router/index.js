@@ -9,13 +9,12 @@ const router = createRouter({
             path: '/',
             name: 'landing',
             component: Landing
-        },
-        {
+        },{
             path: '/layout',
             component: AppLayout,
             children: [
                 {
-                    path: '/',
+                    path: '/dashboard',
                     name: 'dashboard',
                     component: () => import('@/views/Dashboard.vue')
                 },
@@ -109,7 +108,17 @@ const router = createRouter({
                     path: '/documentation',
                     name: 'documentation',
                     component: () => import('@/views/pages/Documentation.vue')
+                },{
+                    path: '/lista/socios',
+                    name: 'listaDeSocios',
+                    component: () => import('@/views/pages/vistas/ListaSocios.vue')
+                },
+                {
+                    path: '/pages/lecturaRecibos',
+                    name: 'crudRecibos',
+                    component: () => import('@/views/pages/vistas/CrudRecibos.vue')
                 }
+
             ]
         },
         {

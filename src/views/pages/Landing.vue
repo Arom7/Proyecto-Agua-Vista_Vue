@@ -29,7 +29,7 @@ function smoothScroll(id) {
                             />
                         </g>
                     </svg>
-                    <span class="text-surface-900 dark:text-surface-0 font-medium text-2xl leading-normal mr-20">SAKAI</span>
+                    <span class="text-surface-900 dark:text-surface-0 font-medium text-2xl leading-normal mr-20">AquaCube</span>
                 </a>
                 <Button
                     class="lg:!hidden"
@@ -59,8 +59,8 @@ function smoothScroll(id) {
                         </li>
                     </ul>
                     <div class="flex border-t lg:border-t-0 border-surface py-4 lg:py-0 mt-4 lg:mt-0 gap-2">
-                        <Button label="Login" text as="router-link" to="/auth/login" rounded></Button>
-                        <Button label="Register" to="/auth/login" rounded></Button>
+                        <Button label="Inicio de sesion" text as="router-link" to="/auth/login" rounded></Button>
+                        <Button label="Registrate" to="/auth/login" rounded></Button>
                     </div>
                 </div>
             </div>

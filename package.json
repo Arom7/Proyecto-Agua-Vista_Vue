@@ -1,5 +1,5 @@
 {
-    "name": "sakai-vue",
+    "name": "AquaCube-vue",
     "version": "4.1.0",
     "scripts": {
         "dev": "vite",
@@ -9,6 +9,7 @@
     },
     "dependencies": {
         "@primevue/themes": "^4.0.0",
+        "axios": "^1.7.5",
         "chart.js": "3.3.2",
         "primeicons": "^6.0.1",
         "primevue": "^4.0.0",

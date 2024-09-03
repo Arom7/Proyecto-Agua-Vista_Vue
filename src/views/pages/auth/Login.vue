@@ -1,10 +1,43 @@
 <script setup>
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
 import { ref } from 'vue';
-
-const email = ref('');
-const password = ref('');
+import { useRouter } from 'vue-router';
+// atributos
+const username = ref('');
+const contrasenia = ref('');
+const errorMessage = ref('');
 const checked = ref(false);
+const router = useRouter();
+const url = 'http://127.0.0.1:8000/api';
+
+async function enviarSesion() {
+    let datos = {
+        username: username.value,
+        contrasenia: contrasenia.value
+    };
+    try {
+        const response = await fetch(`${url}/login`, {
+            method: 'POST',
+            body: JSON.stringify(datos),
+            headers: {
+                'Content-type': 'application/json;'
+            }
+        });
+        console.log(response);
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (data.success) {
+            router.push('/dashboard');
+        }else{
+            errorMessage.value = 'Error: ' + (data.message || 'Solicitud fallida');
+        }
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al intentar iniciar sesión. Inténtalo de nuevo.';
+    }
+};
 </script>
 
 <template>
@@ -31,25 +64,24 @@ const checked = ref(false);
                                 />
                             </g>
                         </svg>
-                        <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Welcome to PrimeLand!</div>
-                        <span class="text-muted-color font-medium">Sign in to continue</span>
+                        <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Bienvenido AquaCube!</div>
+                        <span class="text-muted-color font-medium">Inicie sesion para continuar</span>
                     </div>
 
                     <div>
-                        <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
-                        <InputText id="email1" type="text" placeholder="Email address" class="w-full md:w-[30rem] mb-8" v-model="email" />
-
-                        <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
-                        <Password id="password1" v-model="password" placeholder="Password" :toggleMask="true" class="mb-4" fluid :feedback="false"></Password>
-
+                        <label for="username" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Nombre de usuario</label>
+                        <InputText id="username" type="text" placeholder="Ingrese su nombre de usuario" class="w-full md:w-[30rem] mb-8" v-model="username" />
+                        <label for="contrasenia" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Contraseña</label>
+                        <Password id="contrasenia" v-model="contrasenia" placeholder="Ingrese su contraseña" :toggleMask="true" class="mb-4" fluid :feedback="false"></Password>
                         <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                             <div class="flex items-center">
                                 <Checkbox v-model="checked" id="rememberme1" binary class="mr-2"></Checkbox>
                                 <label for="rememberme1">Remember me</label>
                             </div>
-                            <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
+                            <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Olvidaste tu contraseña?</span>
                         </div>
-                        <Button label="Sign In" class="w-full" as="router-link" to="/"></Button>
+                        <Button @click="enviarSesion" label="Ingresar" class="w-full"></Button>
+                        <p v-if="errorMessage">{{ errorMessage }}</p>
                     </div>
                 </div>
             </div>
