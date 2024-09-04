@@ -4,62 +4,24 @@ import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { onMounted, ref } from 'vue';
 
-
-
 const toast = useToast();
 const dt = ref();
 const recibos = ref();
-const productDialog = ref(false);
+const calendarValue = ref(null);
+const reciboDialog = ref(false);
 const deleteProductDialog = ref(false);
 const deleteProductsDialog = ref(false);
-const product = ref({});
-const selectedProducts = ref();
+const recibo = ref({});
+const recibosSeleccionados = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
 const submitted = ref(false);
-const statuses = ref([
-    { label: 'INSTOCK', value: 'instock' },
-    { label: 'LOWSTOCK', value: 'lowstock' },
-    { label: 'OUTOFSTOCK', value: 'outofstock' }
-]);
+
 
 function formatCurrency(value) {
     if (value) return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
     return;
-}
-
-function openNew() {
-    product.value = {};
-    submitted.value = false;
-    productDialog.value = true;
-}
-
-function hideDialog() {
-    productDialog.value = false;
-    submitted.value = false;
-}
-
-function saveProduct() {
-    submitted.value = true;
-
-    if (product?.value.name?.trim()) {
-        if (product.value.id) {
-            product.value.inventoryStatus = product.value.inventoryStatus.value ? product.value.inventoryStatus.value : product.value.inventoryStatus;
-            products.value[findIndexById(product.value.id)] = product.value;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000 });
-        } else {
-            product.value.id = createId();
-            product.value.code = createId();
-            product.value.image = 'product-placeholder.svg';
-            product.value.inventoryStatus = product.value.inventoryStatus ? product.value.inventoryStatus.value : 'INSTOCK';
-            products.value.push(product.value);
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
-        }
-
-        productDialog.value = false;
-        product.value = {};
-    }
 }
 
 function editProduct(prod) {
@@ -91,48 +53,20 @@ function findIndexById(id) {
     return index;
 }
 
-function createId() {
-    let id = '';
-    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (var i = 0; i < 5; i++) {
-        id += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return id;
-}
-
-function exportCSV() {
-    dt.value.exportCSV();
-}
-
 function confirmDeleteSelected() {
     deleteProductsDialog.value = true;
 }
 
 function deleteSelectedProducts() {
-    products.value = products.value.filter((val) => !selectedProducts.value.includes(val));
+    products.value = products.value.filter((val) => !recibosSeleccionados.value.includes(val));
     deleteProductsDialog.value = false;
-    selectedProducts.value = null;
+    recibosSeleccionados.value = null;
     toast.add({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
 }
 
-function getStatusLabel(status) {
-    switch (status) {
-        case 'INSTOCK':
-            return 'success';
-
-        case 'LOWSTOCK':
-            return 'warn';
-
-        case 'OUTOFSTOCK':
-            return 'danger';
-
-        default:
-            return null;
-    }
-}
-
+// Url de respuesta
 const url = 'http://127.0.0.1:8000/api';
-
+// Peticion get
 async function visualizaRecibos() {
     try{
         const response = await fetch(`${url}/recibos`, {
@@ -146,11 +80,72 @@ async function visualizaRecibos() {
         }
         const data = await response.json();
         recibos.value = data.recibos;
-        console.log(recibos.value)
     }catch (error) {
         console.error('Se produjo un error:', error.message);
-        errorMessage.value = 'Se produjo un error al intentar iniciar sesión. Inténtalo de nuevo.';
+        errorMessage.value = 'Se produjo un error al extraer los datos.';
     }
+}
+// funcion para la peticion get
+function formatToYYYYMMDD(date) {
+    if (!date || !(date instanceof Date)) {
+        console.error('Fecha inválida:', date);
+        return null;
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = '01';
+    return `${year}-${month}-${day}`;
+}
+
+// Peticion post
+async function guardarRecibo() {
+    try{
+        recibo.value.mes_correspondiente = formatToYYYYMMDD(recibo.value.mes_correspondiente);
+        console.log(recibo.value)
+        const response = await fetch(`${url}/recibos`,{
+           method : 'POST',
+           body: JSON.stringify(recibo.value),
+           headers: {
+                'Content-type': 'application/json;'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+
+    }catch (error){
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    }
+}
+
+// Funcion para estados
+function getEstadoLabel(status) {
+    switch (status) {
+        case 1:
+            return 'success';
+        case 0:
+            return 'danger';
+        default:
+            return null;
+    }
+}
+// para generar PDF posteriomente
+function exportCSV() {
+    dt.value.exportCSV();
+}
+// funcion que abre una nueva ventana modal, el submitted es para validacion de datos
+function openNew() {
+    recibo.value = {};
+    submitted.value = false;
+    reciboDialog.value = true;
+}
+// Funcion llamada para ocultar el modal
+function hideDialog() {
+    reciboDialog.value = false;
+    submitted.value = false;
 }
 
 visualizaRecibos()
@@ -162,7 +157,7 @@ visualizaRecibos()
             <Toolbar class="mb-6">
                 <template #start>
                     <Button label="Registrar nuevo recibo" icon="pi pi-plus" severity="secondary" class="mr-2" @click="openNew" />
-                    <Button label="Eliminar" icon="pi pi-trash" severity="secondary" @click="confirmDeleteSelected" :disabled="!selectedProducts || !selectedProducts.length" />
+                    <Button label="Eliminar" icon="pi pi-trash" severity="secondary" @click="confirmDeleteSelected" :disabled="!recibosSeleccionados || !recibosSeleccionados.length" />
                 </template>
 
                 <template #end>
@@ -172,7 +167,7 @@ visualizaRecibos()
 
             <DataTable
                 ref="dt"
-                v-model:selection="selectedProducts"
+                v-model:selection="recibosSeleccionados"
                 :value="recibos"
                 dataKey="id"
                 :paginator="true"
@@ -195,18 +190,14 @@ visualizaRecibos()
                 </template>
 
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-                <Column field="code" header="Id Recibo" sortable style="min-width: 12rem"></Column>
+                <Column field="id" header="Id Recibo" sortable style="min-width: 8rem"></Column>
                 <Column field="name" header="Dueñio" sortable style="min-width: 16rem"></Column>
-                <Column field="name" header="Observaciones" sortable style="min-width: 16rem"></Column>
-                <Column field="price" header="Total" sortable style="min-width: 8rem">
+                <Column field="observaciones" header="Observaciones" sortable style="min-width: 8rem"></Column>
+                <Column field="total" header="Total" sortable style="min-width: 6rem"></Column>
+                <Column field="fecha_lectura" header="Fecha de lectura" sortable style="min-width: 10rem"></Column>
+                <Column field="estado_pago" header="Estado" sortable style="min-width: 12rem">
                     <template #body="slotProps">
-                        {{ formatCurrency(slotProps.data.price) }}
-                    </template>
-                </Column>
-                <Column field="category" header="Category" sortable style="min-width: 10rem"></Column>
-                <Column field="inventoryStatus" header="Estado" sortable style="min-width: 12rem">
-                    <template #body="slotProps">
-                        <Tag :value="slotProps.data.inventoryStatus" :severity="getStatusLabel(slotProps.data.inventoryStatus)" />
+                        <Tag :value="slotProps.data.estado_pago == 1? 'Pagado' : 'Endeudado'" :severity="getEstadoLabel(slotProps.data.estado_pago)" />
                     </template>
                 </Column>
                 <Column :exportable="false" style="min-width: 12rem">
@@ -218,68 +209,55 @@ visualizaRecibos()
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="productDialog" :style="{ width: '450px' }" header="Product Details" :modal="true">
+        <Dialog v-model:visible="reciboDialog" :style="{ width: '450px' }" header="Registrar nuevo recibo" :modal="true">
             <div class="flex flex-col gap-6">
-                <img v-if="product.image" :src="`https://primefaces.org/cdn/primevue/images/product/${product.image}`" :alt="product.image" class="block m-auto pb-4" />
                 <div>
-                    <label for="name" class="block font-bold mb-3">Name</label>
-                    <InputText id="name" v-model.trim="product.name" required="true" autofocus :invalid="submitted && !product.name" fluid />
-                    <small v-if="submitted && !product.name" class="text-red-500">Name is required.</small>
+                    <label for="nombre" class="block font-bold mb-3">Nombre del socio</label>
+                    <InputText id="nombre" v-model.trim="recibo.nombre" required="true" autofocus :invalid="submitted && !recibo.nombre" fluid />
+                    <small v-if="submitted && !recibo.nombre" class="text-red-500">El nombre es requerido</small>
                 </div>
                 <div>
-                    <label for="description" class="block font-bold mb-3">Description</label>
-                    <Textarea id="description" v-model="product.description" required="true" rows="3" cols="20" fluid />
+                    <label for="primerApellido" class="block font-bold mb-3">Primer apellido del socio</label>
+                    <InputText id="primerApellido" v-model.trim="recibo.primerApellido" required="true" autofocus :invalid="submitted && !recibo.primerApellido" fluid />
+                    <small v-if="submitted && !recibo.primerApellido" class="text-red-500">Este campo es requerido</small>
                 </div>
                 <div>
-                    <label for="inventoryStatus" class="block font-bold mb-3">Inventory Status</label>
-                    <Select id="inventoryStatus" v-model="product.inventoryStatus" :options="statuses" optionLabel="label" placeholder="Select a Status" fluid></Select>
+                    <label for="segundoApellido" class="block font-bold mb-3">Segundo apellido del socio</label>
+                    <InputText id="segundoApellido" v-model.trim="recibo.segundoApellido" required="true" autofocus :invalid="submitted && !recibo.segundoApellido" fluid />
+                </div>
+                <div>
+                    <label for="observaciones" class="block font-bold mb-3">Observaciones</label>
+                    <Textarea id="observaciones" v-model.trim="recibo.observaciones" rows="3" cols="20" fluid />
                 </div>
 
-                <div>
-                    <span class="block font-bold mb-4">Category</span>
-                    <div class="grid grid-cols-12 gap-4">
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category1" v-model="product.category" name="category" value="Accessories" />
-                            <label for="category1">Accessories</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category2" v-model="product.category" name="category" value="Clothing" />
-                            <label for="category2">Clothing</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category3" v-model="product.category" name="category" value="Electronics" />
-                            <label for="category3">Electronics</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <RadioButton id="category4" v-model="product.category" name="category" value="Fitness" />
-                            <label for="category4">Fitness</label>
-                        </div>
-                    </div>
+                <div class="field col-12 md:col-4">
+                    <div class="font-semibold text-xl">Mes correspondiente de lectura</div>
+                    <DatePicker id="fecha-lectura" :showIcon="true" :showButtonBar="true" v-model="recibo.mes_correspondiente"></DatePicker>
                 </div>
 
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-6">
-                        <label for="price" class="block font-bold mb-3">Price</label>
-                        <InputNumber id="price" v-model="product.price" mode="currency" currency="USD" locale="en-US" fluid />
+                        <label for="lectura_actual" class="block font-bold mb-3">Lectura actual</label>
+                        <InputNumber id="lectura_actual" v-model.trim="recibo.lectura_actual" fluid />
                     </div>
                     <div class="col-span-6">
-                        <label for="quantity" class="block font-bold mb-3">Quantity</label>
-                        <InputNumber id="quantity" v-model="product.quantity" integeronly fluid />
+                        <label for="cuadra" class="block font-bold mb-3">Codigo de cuadra</label>
+                        <InputNumber id="cuadra" v-model.trim="recibo.cuadra" integeronly fluid />
                     </div>
                 </div>
-            </div>
 
+            </div>
             <template #footer>
                 <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
-                <Button label="Save" icon="pi pi-check" @click="saveProduct" />
+                <Button label="Save" icon="pi pi-check" @click="guardarRecibo" />
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="deleteProductDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+        <Dialog v-model:visible="deleteProductDialog" :style="{ width: '450px' }" header="Confirmacion" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
                 <span v-if="product"
-                    >Are you sure you want to delete <b>{{ product.name }}</b
+                    >Estas seguro de querer eliminar este recibo? <b>{{ product.name }}</b
                     >?</span
                 >
             </div>
@@ -289,10 +267,10 @@ visualizaRecibos()
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="deleteProductsDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+        <Dialog v-model:visible="deleteProductsDialog" :style="{ width: '450px' }" header="Confirmacion" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product">Are you sure you want to delete the selected products?</span>
+                <span v-if="product">Estas seguro de querer eliminar los recibos seleccionados?</span>
             </div>
             <template #footer>
                 <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
