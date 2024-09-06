@@ -11,13 +11,23 @@ const calendarValue = ref(null);
 const reciboDialog = ref(false);
 const deleteProductDialog = ref(false);
 const deleteProductsDialog = ref(false);
-const recibo = ref({});
+const recibo = ref({
+    nombre : '', //String
+    primerApellido : '', //String
+    segundoApellido : '', //String
+    observaciones : '', //String
+    cuadra : null, //Integer
+    mes_correspondiente : null, //Date
+    lectura_actual : null //Integer
+});
 const recibosSeleccionados = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
 const submitted = ref(false);
-
+const esValidoNombre = ref(true);
+const esValidoPrimerApellido = ref(true);
+const esValidoSegundoApellido = ref(true);
 
 function formatCurrency(value) {
     if (value) return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -100,8 +110,25 @@ function formatToYYYYMMDD(date) {
 // Peticion post
 async function guardarRecibo() {
     try{
+        // submitted hace que el formulario sea enviado
+        submitted.value = true;
+        if(!validacion(recibo.value.nombre)){
+            esValidoNombre.value = false;
+            throw new Error(`Error de validacion de datos, campo nombre`);
+        }
+
+        if(!validacion(recibo.value.primerApellido)){
+            esValidoPrimerApellido.value = false;
+            throw new Error(`Error de validacion de datos, campo primer apellido`);
+        }
+
+        if(!validacion(recibo.value.segundoApellido)){
+            esValidoSegundoApellido.value = false;
+            throw new Error(`Error de validacion de datos, campo segundo apellido`);
+        }
+
         recibo.value.mes_correspondiente = formatToYYYYMMDD(recibo.value.mes_correspondiente);
-        console.log(recibo.value)
+
         const response = await fetch(`${url}/recibos`,{
            method : 'POST',
            body: JSON.stringify(recibo.value),
@@ -109,16 +136,24 @@ async function guardarRecibo() {
                 'Content-type': 'application/json;'
             }
         });
-        
+        console.log(response)
         if (!response.ok) {
-            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+            const problema = await response.json();
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText} mensaje: ${problema.message}`);
         }
         const data = await response.json();
+        hideDialog();
 
     }catch (error){
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
     }
+};
+
+// Validacion
+function validacion(valor){
+    const regex = /^(?! )[A-Za-zñÑ]+( [A-Za-zñÑ]+)*$/;
+    return regex.test(valor);
 }
 
 // Funcion para estados
@@ -214,16 +249,19 @@ visualizaRecibos()
                 <div>
                     <label for="nombre" class="block font-bold mb-3">Nombre del socio</label>
                     <InputText id="nombre" v-model.trim="recibo.nombre" required="true" autofocus :invalid="submitted && !recibo.nombre" fluid />
-                    <small v-if="submitted && !recibo.nombre" class="text-red-500">El nombre es requerido</small>
+                    <small v-if="submitted && !recibo.nombre" class="text-red-500">Este campos es requerido</small>
+                    <small v-if="submitted && !esValidoNombre" class="text-red-500">Este campo solo acepta letras y espacios</small>
                 </div>
                 <div>
                     <label for="primerApellido" class="block font-bold mb-3">Primer apellido del socio</label>
                     <InputText id="primerApellido" v-model.trim="recibo.primerApellido" required="true" autofocus :invalid="submitted && !recibo.primerApellido" fluid />
                     <small v-if="submitted && !recibo.primerApellido" class="text-red-500">Este campo es requerido</small>
+                    <small v-if="submitted && !esValidoPrimerApellido" class="text-red-500">Este campo solo acepta letras y espacios</small>
                 </div>
                 <div>
                     <label for="segundoApellido" class="block font-bold mb-3">Segundo apellido del socio</label>
-                    <InputText id="segundoApellido" v-model.trim="recibo.segundoApellido" required="true" autofocus :invalid="submitted && !recibo.segundoApellido" fluid />
+                    <InputText id="segundoApellido" v-model.trim="recibo.segundoApellido" autofocus :invalid="submitted && !validacion" fluid />
+                    <small v-if="submitted && !esValidoSegundoApellido" class="text-red-500">Este campo solo acepta letras y espacios</small>
                 </div>
                 <div>
                     <label for="observaciones" class="block font-bold mb-3">Observaciones</label>
