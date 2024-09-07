@@ -9,17 +9,19 @@ const dt = ref();
 const recibos = ref();
 const calendarValue = ref(null);
 const reciboDialog = ref(false);
+const reciboUpdate = ref(false);
 const deleteProductDialog = ref(false);
 const deleteProductsDialog = ref(false);
 const recibo = ref({
-    nombre : '', //String
-    primerApellido : '', //String
-    segundoApellido : '', //String
+    id_socio : null, //Integer
     observaciones : '', //String
     cuadra : null, //Integer
     mes_correspondiente : null, //Date
     lectura_actual : null //Integer
 });
+const sociosListaBox = ref([]);
+const socio = ref(null);
+
 const recibosSeleccionados = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
@@ -34,10 +36,7 @@ function formatCurrency(value) {
     return;
 }
 
-function editProduct(prod) {
-    product.value = { ...prod };
-    productDialog.value = true;
-}
+
 
 function confirmDeleteProduct(prod) {
     product.value = prod;
@@ -112,23 +111,11 @@ async function guardarRecibo() {
     try{
         // submitted hace que el formulario sea enviado
         submitted.value = true;
-        if(!validacion(recibo.value.nombre)){
-            esValidoNombre.value = false;
-            throw new Error(`Error de validacion de datos, campo nombre`);
-        }
-
-        if(!validacion(recibo.value.primerApellido)){
-            esValidoPrimerApellido.value = false;
-            throw new Error(`Error de validacion de datos, campo primer apellido`);
-        }
-
-        if(!validacion(recibo.value.segundoApellido)){
-            esValidoSegundoApellido.value = false;
-            throw new Error(`Error de validacion de datos, campo segundo apellido`);
-        }
 
         recibo.value.mes_correspondiente = formatToYYYYMMDD(recibo.value.mes_correspondiente);
+        recibo.value.id_socio = socio.value.code;
 
+        console.log(recibo.value);
         const response = await fetch(`${url}/recibos`,{
            method : 'POST',
            body: JSON.stringify(recibo.value),
@@ -150,12 +137,6 @@ async function guardarRecibo() {
     }
 };
 
-// Validacion
-function validacion(valor){
-    const regex = /^(?! )[A-Za-zñÑ]+( [A-Za-zñÑ]+)*$/;
-    return regex.test(valor);
-}
-
 // Funcion para estados
 function getEstadoLabel(status) {
     switch (status) {
@@ -171,18 +152,79 @@ function getEstadoLabel(status) {
 function exportCSV() {
     dt.value.exportCSV();
 }
-// funcion que abre una nueva ventana modal, el submitted es para validacion de datos
+//Funcion que abre modal registro, el submitted es para validacion de datos
 function openNew() {
+    obtenerSocios();
     recibo.value = {};
     submitted.value = false;
     reciboDialog.value = true;
 }
+
+//Funcion que abre modal de actualizacion
+function editProduct(datos) {
+    recibo.value = { ...datos };
+    console.log(datos);
+    console.log(recibo.value);
+    getPropiedades();
+    reciboUpdate.value = true;
+}
+
 // Funcion llamada para ocultar el modal
 function hideDialog() {
     reciboDialog.value = false;
     submitted.value = false;
 }
 
+function cerrarActualizacion(){
+    reciboUpdate.value = false;
+}
+
+const dropdownValue = ref(null);
+const dropdownValues = ref([]);
+
+async function obtenerSocios(){
+    try{
+        const response = await fetch(`${url}/socios`, {
+            method : 'GET',
+            headers: {
+                'Content-type': 'application/json;'
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        sociosListaBox.value = data.lista_socios.map(item => ({
+            name: item.nombre_socio + " " + item.primer_apellido_socio + " " + item.segundo_apellido_socio,  // Ajusta los campos según la estructura de tu API
+            code: item.id  // Ajusta este campo también
+        }));
+    }catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al extraer los datos.';
+    }
+}
+
+async function getPropiedades() {
+    try{
+        const response = await fetch(`${url}/recibos`, {
+            method : 'GET',
+            headers: {
+                'Content-type': 'application/json;'
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        sociosListaBox.value = data.recibos.map(item => ({
+            name: item.nombre_completo,  // Ajusta los campos según la estructura de tu API
+            code: item.id   // Ajusta este campo también
+        }));
+    }catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al extraer los datos.';
+    }
+}
 visualizaRecibos()
 </script>
 
@@ -225,17 +267,19 @@ visualizaRecibos()
                 </template>
 
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-                <Column field="id" header="Id Recibo" sortable style="min-width: 8rem"></Column>
-                <Column field="name" header="Dueñio" sortable style="min-width: 16rem"></Column>
-                <Column field="observaciones" header="Observaciones" sortable style="min-width: 8rem"></Column>
-                <Column field="total" header="Total" sortable style="min-width: 6rem"></Column>
+                <Column field="id" header="#Aviso" sortable style="min-width: 6rem"></Column>
                 <Column field="fecha_lectura" header="Fecha de lectura" sortable style="min-width: 10rem"></Column>
-                <Column field="estado_pago" header="Estado" sortable style="min-width: 12rem">
+                <Column field="nombre_completo" header="Dueño" sortable style="min-width: 16rem"></Column>
+                <Column field="observaciones" header="Observaciones" style="min-width: 10rem"></Column>
+                <Column field="lectura_anterior" header="Lectura Anterior" sortable style="min-width: 8rem"></Column>
+                <Column field="lectura_actual" header="Lectura Actual" sortable style="min-width: 8rem"></Column>
+                <Column field="total" header="Total" sortable style="min-width: 6rem"></Column>
+                <Column field="estado_pago" header="Estado" style="min-width: 10rem">
                     <template #body="slotProps">
                         <Tag :value="slotProps.data.estado_pago == 1? 'Pagado' : 'Endeudado'" :severity="getEstadoLabel(slotProps.data.estado_pago)" />
                     </template>
                 </Column>
-                <Column :exportable="false" style="min-width: 12rem">
+                <Column :exportable="false" style="min-width: 8rem">
                     <template #body="slotProps">
                         <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editProduct(slotProps.data)" />
                         <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteProduct(slotProps.data)" />
@@ -244,50 +288,63 @@ visualizaRecibos()
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="reciboDialog" :style="{ width: '450px' }" header="Registrar nuevo recibo" :modal="true">
+        <Dialog v-model:visible="reciboDialog" :style="{ width: '450px' }" header="Registrar nuevo pre-aviso" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
-                    <label for="nombre" class="block font-bold mb-3">Nombre del socio</label>
-                    <InputText id="nombre" v-model.trim="recibo.nombre" required="true" autofocus :invalid="submitted && !recibo.nombre" fluid />
-                    <small v-if="submitted && !recibo.nombre" class="text-red-500">Este campos es requerido</small>
-                    <small v-if="submitted && !esValidoNombre" class="text-red-500">Este campo solo acepta letras y espacios</small>
+                    <label for="nombre" class="block font-bold mb-3">Nombre del socio: </label>
+                    <Listbox v-model="socio" :options="sociosListaBox" optionLabel="name" :filter="true" />
+                    <h3 v-if="socio">Socio seleccionado: {{ socio.name }}</h3>
                 </div>
                 <div>
-                    <label for="primerApellido" class="block font-bold mb-3">Primer apellido del socio</label>
-                    <InputText id="primerApellido" v-model.trim="recibo.primerApellido" required="true" autofocus :invalid="submitted && !recibo.primerApellido" fluid />
-                    <small v-if="submitted && !recibo.primerApellido" class="text-red-500">Este campo es requerido</small>
-                    <small v-if="submitted && !esValidoPrimerApellido" class="text-red-500">Este campo solo acepta letras y espacios</small>
-                </div>
-                <div>
-                    <label for="segundoApellido" class="block font-bold mb-3">Segundo apellido del socio</label>
-                    <InputText id="segundoApellido" v-model.trim="recibo.segundoApellido" autofocus :invalid="submitted && !validacion" fluid />
-                    <small v-if="submitted && !esValidoSegundoApellido" class="text-red-500">Este campo solo acepta letras y espacios</small>
-                </div>
-                <div>
-                    <label for="observaciones" class="block font-bold mb-3">Observaciones</label>
+                    <label for="observaciones" class="block font-bold mb-3">Observaciones: </label>
                     <Textarea id="observaciones" v-model.trim="recibo.observaciones" rows="3" cols="20" fluid />
                 </div>
 
                 <div class="field col-12 md:col-4">
-                    <div class="font-semibold text-xl">Mes correspondiente de lectura</div>
+                    <div class="font-semibold text-xl">Mes correspondiente de lectura: </div>
                     <DatePicker id="fecha-lectura" :showIcon="true" :showButtonBar="true" v-model="recibo.mes_correspondiente"></DatePicker>
                 </div>
 
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-6">
-                        <label for="lectura_actual" class="block font-bold mb-3">Lectura actual</label>
+                        <label for="lectura_actual" class="block font-bold mb-3">Lectura actual: </label>
                         <InputNumber id="lectura_actual" v-model.trim="recibo.lectura_actual" fluid />
                     </div>
                     <div class="col-span-6">
-                        <label for="cuadra" class="block font-bold mb-3">Codigo de cuadra</label>
+                        <label for="cuadra" class="block font-bold mb-3">Codigo de cuadra: </label>
                         <InputNumber id="cuadra" v-model.trim="recibo.cuadra" integeronly fluid />
                     </div>
                 </div>
 
             </div>
             <template #footer>
-                <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
-                <Button label="Save" icon="pi pi-check" @click="guardarRecibo" />
+                <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
+                <Button label="Guardar" icon="pi pi-check" @click="guardarRecibo" />
+            </template>
+        </Dialog>
+
+        <Dialog v-model:visible="reciboUpdate" :style="{ width: '450px' }" header="Actualizar pre-aviso" :modal="true">
+            <div class="flex flex-col gap-6">
+                <div>
+                    <label for="observaciones" class="block font-bold mb-3">Observaciones: </label>
+                    <Textarea id="observaciones" v-model.trim="recibo.observaciones" rows="3" cols="20" fluid />
+                </div>
+
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="col-span-6">
+                        <label for="lectura_actual" class="block font-bold mb-3">Lectura actual: </label>
+                        <InputNumber id="lectura_actual" v-model.trim="recibo.lectura_actual" fluid />
+                    </div>
+                    <div class="col-span-6">
+                        <label for="cuadra" class="block font-bold mb-3">Codigo de cuadra: </label>
+                        <Select v-model="dropdownValue" :options="dropdownValues" optionLabel="name" placeholder="Select" />
+                    </div>
+                </div>
+
+            </div>
+            <template #footer>
+                <Button label="Cancelar" icon="pi pi-times" text @click="cerrarActualizacion" />
+                <Button label="Actualizar" icon="pi pi-check" @click="guardarRecibo" />
             </template>
         </Dialog>
 
