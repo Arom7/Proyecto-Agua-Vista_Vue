@@ -2,41 +2,47 @@
 import { ProductService } from '@/service/ProductService';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
+
+//variables reactivas
 
 const toast = useToast();
 const dt = ref();
+//me sirve
 const recibos = ref();
+//me sirve
 const calendarValue = ref(null);
+//me sirve
 const reciboDialog = ref(false);
+//me sirve
 const reciboUpdate = ref(false);
+//me sirve
+const dropdownValue = ref(null);
+
 const deleteProductDialog = ref(false);
 const deleteProductsDialog = ref(false);
+//me sirve
 const recibo = ref({
-    id_socio : null, //Integer
-    observaciones : '', //String
-    cuadra : null, //Integer
-    mes_correspondiente : null, //Date
-    lectura_actual : null //Integer
+    id_socio: null, //Integer
+    observaciones: '', //String
+    cuadra: null, //Integer
+    mes_correspondiente: null, //Date
+    lectura_actual: null //Integer
 });
+//me sirve
 const sociosListaBox = ref([]);
+//me sirve
 const socio = ref(null);
-
+//me sirve
+const propiedadesValues = ref([]);
+//me sirve
 const recibosSeleccionados = ref();
+//me sirve
+const submitted = ref(false);
+
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
-const submitted = ref(false);
-const esValidoNombre = ref(true);
-const esValidoPrimerApellido = ref(true);
-const esValidoSegundoApellido = ref(true);
-
-function formatCurrency(value) {
-    if (value) return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-    return;
-}
-
-
 
 function confirmDeleteProduct(prod) {
     product.value = prod;
@@ -50,18 +56,6 @@ function deleteProduct() {
     toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
 }
 
-function findIndexById(id) {
-    let index = -1;
-    for (let i = 0; i < products.value.length; i++) {
-        if (products.value[i].id === id) {
-            index = i;
-            break;
-        }
-    }
-
-    return index;
-}
-
 function confirmDeleteSelected() {
     deleteProductsDialog.value = true;
 }
@@ -73,29 +67,31 @@ function deleteSelectedProducts() {
     toast.add({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
 }
 
+
+/**
+ * Codigo organizado por peticion get, involucra recibos y se actualizan ante lo requerido
+ */
 // Url de respuesta
 const url = 'http://127.0.0.1:8000/api';
-// Peticion get
+
+onMounted(() => {
+    visualizaRecibos();
+});
+
 async function visualizaRecibos() {
-    try{
-        const response = await fetch(`${url}/recibos`, {
-            method : 'GET',
-            headers: {
-                'Content-type': 'application/json;'
-            }
-        });
+    try {
+        const response = await fetch(`${url}/recibos`);
         if (!response.ok) {
-            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+            throw new Error(`Error en la solicitud: ${response.status}`);
         }
         const data = await response.json();
         recibos.value = data.recibos;
-    }catch (error) {
+    } catch (error) {
         console.error('Se produjo un error:', error.message);
-        errorMessage.value = 'Se produjo un error al extraer los datos.';
     }
 }
 // funcion para la peticion get
-function formatToYYYYMMDD(date) {
+function formatoFecha(date) {
     if (!date || !(date instanceof Date)) {
         console.error('Fecha inválida:', date);
         return null;
@@ -108,34 +104,32 @@ function formatToYYYYMMDD(date) {
 
 // Peticion post
 async function guardarRecibo() {
-    try{
+    try {
         // submitted hace que el formulario sea enviado
         submitted.value = true;
-
-        recibo.value.mes_correspondiente = formatToYYYYMMDD(recibo.value.mes_correspondiente);
+        recibo.value.mes_correspondiente = formatoFecha(recibo.value.mes_correspondiente);
         recibo.value.id_socio = socio.value.code;
 
         console.log(recibo.value);
-        const response = await fetch(`${url}/recibos`,{
-           method : 'POST',
-           body: JSON.stringify(recibo.value),
-           headers: {
+        const response = await fetch(`${url}/recibos`, {
+            method: 'POST',
+            body: JSON.stringify(recibo.value),
+            headers: {
                 'Content-type': 'application/json;'
             }
         });
-        console.log(response)
+        console.log(response);
         if (!response.ok) {
             const problema = await response.json();
             throw new Error(`Error en la solicitud: ${response.status} ${response.statusText} mensaje: ${problema.message}`);
         }
         const data = await response.json();
         hideDialog();
-
-    }catch (error){
+    } catch (error) {
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
     }
-};
+}
 
 // Funcion para estados
 function getEstadoLabel(status) {
@@ -156,6 +150,7 @@ function exportCSV() {
 function openNew() {
     obtenerSocios();
     recibo.value = {};
+    socio.value = null;
     submitted.value = false;
     reciboDialog.value = true;
 }
@@ -163,9 +158,8 @@ function openNew() {
 //Funcion que abre modal de actualizacion
 function editProduct(datos) {
     recibo.value = { ...datos };
-    console.log(datos);
     console.log(recibo.value);
-    getPropiedades();
+    obtenerSocios();
     reciboUpdate.value = true;
 }
 
@@ -175,59 +169,53 @@ function hideDialog() {
     submitted.value = false;
 }
 
-function cerrarActualizacion(){
+function cerrarActualizacion() {
     reciboUpdate.value = false;
 }
 
-const dropdownValue = ref(null);
-const dropdownValues = ref([]);
+watch(socio, (newSocio) => {
+    if (newSocio) {
+        codigoPropiedad(newSocio.code);
+    }
+});
 
-async function obtenerSocios(){
-    try{
-        const response = await fetch(`${url}/socios`, {
-            method : 'GET',
-            headers: {
-                'Content-type': 'application/json;'
-            }
-        });
+async function obtenerSocios() {
+    try {
+        const response = await fetch(`${url}/socios`);
         if (!response.ok) {
             throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
-        sociosListaBox.value = data.lista_socios.map(item => ({
-            name: item.nombre_socio + " " + item.primer_apellido_socio + " " + item.segundo_apellido_socio,  // Ajusta los campos según la estructura de tu API
-            code: item.id  // Ajusta este campo también
+        sociosListaBox.value = data.lista_socios.map((item) => ({
+            name: item.nombre_socio + ' ' + item.primer_apellido_socio + ' ' + item.segundo_apellido_socio, // Ajusta los campos según la estructura de tu API
+            code: item.id // Ajusta este campo también
         }));
-    }catch (error) {
+    } catch (error) {
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al extraer los datos.';
     }
 }
 
-async function getPropiedades() {
-    try{
-        const response = await fetch(`${url}/recibos`, {
-            method : 'GET',
-            headers: {
-                'Content-type': 'application/json;'
-            }
-        });
+const codigoPropiedad = async (socioId) => {
+    try {
+        const response = await fetch(`${url}/propiedades/socio/${socioId}`);
         if (!response.ok) {
             throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
-        sociosListaBox.value = data.recibos.map(item => ({
-            name: item.nombre_completo,  // Ajusta los campos según la estructura de tu API
-            code: item.id   // Ajusta este campo también
-        }));
-    }catch (error) {
+        if (data.status != 400) {
+            propiedadesValues.value = data.propiedades.map((item) => ({
+                descripcion: item.descripcion_propiedad,
+                code: item.id
+            }));
+        }else{
+            propiedadesValues.value = null;
+        }
+    } catch (error) {
         console.error('Se produjo un error:', error.message);
-        errorMessage.value = 'Se produjo un error al extraer los datos.';
     }
-}
-visualizaRecibos()
+};
 </script>
-
 <template>
     <div>
         <div class="card">
@@ -276,7 +264,7 @@ visualizaRecibos()
                 <Column field="total" header="Total" sortable style="min-width: 6rem"></Column>
                 <Column field="estado_pago" header="Estado" style="min-width: 10rem">
                     <template #body="slotProps">
-                        <Tag :value="slotProps.data.estado_pago == 1? 'Pagado' : 'Endeudado'" :severity="getEstadoLabel(slotProps.data.estado_pago)" />
+                        <Tag :value="slotProps.data.estado_pago == 1 ? 'Pagado' : 'Endeudado'" :severity="getEstadoLabel(slotProps.data.estado_pago)" />
                     </template>
                 </Column>
                 <Column :exportable="false" style="min-width: 8rem">
@@ -293,7 +281,7 @@ visualizaRecibos()
                 <div>
                     <label for="nombre" class="block font-bold mb-3">Nombre del socio: </label>
                     <Listbox v-model="socio" :options="sociosListaBox" optionLabel="name" :filter="true" />
-                    <h3 v-if="socio">Socio seleccionado: {{ socio.name }}</h3>
+                    <Message severity="secondary" v-if="socio">Socio seleccionado: {{ socio.name }}</Message>
                 </div>
                 <div>
                     <label for="observaciones" class="block font-bold mb-3">Observaciones: </label>
@@ -301,7 +289,7 @@ visualizaRecibos()
                 </div>
 
                 <div class="field col-12 md:col-4">
-                    <div class="font-semibold text-xl">Mes correspondiente de lectura: </div>
+                    <div class="font-semibold text-xl">Mes correspondiente de lectura:</div>
                     <DatePicker id="fecha-lectura" :showIcon="true" :showButtonBar="true" v-model="recibo.mes_correspondiente"></DatePicker>
                 </div>
 
@@ -312,10 +300,9 @@ visualizaRecibos()
                     </div>
                     <div class="col-span-6">
                         <label for="cuadra" class="block font-bold mb-3">Codigo de cuadra: </label>
-                        <InputNumber id="cuadra" v-model.trim="recibo.cuadra" integeronly fluid />
+                        <Select v-model="dropdownValue" :options="propiedadesValues" optionLabel="code" placeholder="Select" />
                     </div>
                 </div>
-
             </div>
             <template #footer>
                 <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
@@ -325,6 +312,11 @@ visualizaRecibos()
 
         <Dialog v-model:visible="reciboUpdate" :style="{ width: '450px' }" header="Actualizar pre-aviso" :modal="true">
             <div class="flex flex-col gap-6">
+                <div>
+                    <label for="nombre" class="block font-bold mb-3">Nombre del socio: </label>
+                    <Listbox v-model="socio" :options="sociosListaBox" optionLabel="name" :filter="true" />
+                    <Message severity="secondary" v-if="socio">Socio seleccionado: {{ socio.name }}</Message>
+                </div>
                 <div>
                     <label for="observaciones" class="block font-bold mb-3">Observaciones: </label>
                     <Textarea id="observaciones" v-model.trim="recibo.observaciones" rows="3" cols="20" fluid />
@@ -337,10 +329,9 @@ visualizaRecibos()
                     </div>
                     <div class="col-span-6">
                         <label for="cuadra" class="block font-bold mb-3">Codigo de cuadra: </label>
-                        <Select v-model="dropdownValue" :options="dropdownValues" optionLabel="name" placeholder="Select" />
+                        <Select v-model="dropdownValue" :options="propiedadesValues" optionLabel="code" placeholder="Select" />
                     </div>
                 </div>
-
             </div>
             <template #footer>
                 <Button label="Cancelar" icon="pi pi-times" text @click="cerrarActualizacion" />
@@ -359,17 +350,6 @@ visualizaRecibos()
             <template #footer>
                 <Button label="No" icon="pi pi-times" text @click="deleteProductDialog = false" />
                 <Button label="Yes" icon="pi pi-check" @click="deleteProduct" />
-            </template>
-        </Dialog>
-
-        <Dialog v-model:visible="deleteProductsDialog" :style="{ width: '450px' }" header="Confirmacion" :modal="true">
-            <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product">Estas seguro de querer eliminar los recibos seleccionados?</span>
-            </div>
-            <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
-                <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedProducts" />
             </template>
         </Dialog>
     </div>

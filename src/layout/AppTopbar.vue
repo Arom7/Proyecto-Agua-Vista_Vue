@@ -2,7 +2,7 @@
 import { useLayout } from '@/layout/composables/layout';
 import AppConfigurator from './AppConfigurator.vue';
 
-const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
+const { onMenuToggle, toggleDarkMode, isDarkTheme} = useLayout();
 </script>
 
 <template>

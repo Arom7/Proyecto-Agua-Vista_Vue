@@ -66,6 +66,7 @@ pedirLista();
                     <div class="flex flex-col">
                         <div v-for="(item, index) in slotProps.items" :key="index">
                             <div class="flex flex-col sm:flex-row sm:items-center p-6 gap-4" :class="{ 'border-t border-surface': index !== 0 }">
+                                <!--Tratar de implementar imagen-->
                                 <div class="md:w-40 relative">
                                     <Tag :value="item.inventoryStatus" :severity="getSeverity(item)" class="absolute dark:!bg-surface-900" style="left: 4px; top: 4px"></Tag>
                                 </div>
@@ -86,15 +87,8 @@ pedirLista();
                                                 "
                                             >
                                                 <span class="text-surface-900 font-medium text-sm">{{ item.ci_socio }}</span>
-                                                <i class="pi pi-star-fill text-yellow-500"></i>
+                                                <i class="pi pi-star-fill text-blue-500"></i>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex flex-col md:items-end gap-8">
-                                        <span class="text-xl font-semibold">${{ item.price }}</span>
-                                        <div class="flex flex-row-reverse md:flex-row gap-2">
-                                            <Button icon="pi pi-heart" outlined></Button>
-                                            <Button icon="pi pi-shopping-cart" label="Buy Now" :disabled="item.inventoryStatus === 'OUTOFSTOCK'" class="flex-auto md:flex-initial whitespace-nowrap"></Button>
                                         </div>
                                     </div>
                                 </div>
@@ -129,15 +123,8 @@ pedirLista();
                                                 "
                                             >
                                                 <span class="text-surface-900 font-medium text-sm">{{ item.ci_socio }}</span>
-                                                <i class="pi pi-star-fill text-yellow-500"></i>
+                                                <i class="pi pi-star-fill text-blue-500"></i>
                                             </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex flex-col gap-6 mt-6">
-                                        <span class="text-2xl font-semibold">${{ item.price }}</span>
-                                        <div class="flex gap-2">
-                                            <Button icon="pi pi-shopping-cart" label="Buy Now" :disabled="item.inventoryStatus === 'OUTOFSTOCK'" class="flex-auto whitespace-nowrap"></Button>
-                                            <Button icon="pi pi-heart" outlined></Button>
                                         </div>
                                     </div>
                                 </div>

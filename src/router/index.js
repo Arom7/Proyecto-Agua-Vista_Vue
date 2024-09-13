@@ -109,16 +109,20 @@ const router = createRouter({
                     name: 'documentation',
                     component: () => import('@/views/pages/Documentation.vue')
                 },{
-                    path: '/lista/socios',
+                    path: '/listaSocios',
                     name: 'listaDeSocios',
                     component: () => import('@/views/pages/vistas/ListaSocios.vue')
                 },
                 {
-                    path: '/pages/lecturaRecibos',
+                    path: '/lecturaRecibos',
                     name: 'crudRecibos',
                     component: () => import('@/views/pages/vistas/CrudRecibos.vue')
+                },
+                {
+                    path:'/multas',
+                    name: 'crudMultas',
+                    component : () => import('@/views/pages/vistas/CrudMultas.vue')
                 }
-
             ]
         },
         {
