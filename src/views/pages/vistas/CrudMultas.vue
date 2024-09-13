@@ -12,6 +12,7 @@ const multas = ref();
 const multa = ref({});
 const modalRegistroMulta = ref(false);
 const actualizacionMulta = ref(false);
+let idMulta;
 
 const toast = useToast();
 const dt = ref();
@@ -139,8 +140,10 @@ function hideDialog() {
 async function registrarMulta() {
     try {
         submitted.value = true;
+        multa.value.id = null;
         if(actualizacionMulta.value){
-            actualizarMulta()
+            await actualizarMulta();
+            return;
         }
         const response = await fetch(`${url}/multas`, {
             method: 'POST',
@@ -169,6 +172,7 @@ async function registrarMulta() {
 //Apertura de modal de edicion
 function editarMulta(data) {
     multa.value = { ...data };
+    idMulta = multa.value.id;
     modalRegistroMulta.value = true;
     actualizacionMulta.value = true;
 }
@@ -176,8 +180,9 @@ function editarMulta(data) {
 //Metodo put para actualizar una multa
 async function actualizarMulta() {
     try {
+        console.log(multa.value);
         submitted.value = true;
-        const response = await fetch(`${url}/multas`, {
+        const response = await fetch(`${url}/multas/${idMulta}`, {
             method: 'PUT',
             body: JSON.stringify(multa.value),
             headers: {
