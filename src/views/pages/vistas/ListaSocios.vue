@@ -1,74 +1,21 @@
 <script setup>
-import { ProductService } from '@/service/ProductService';
 import { onBeforeMount, onMounted, ref } from 'vue';
+import { fetchListaSocios } from '@/service/peticionesApi';
 
 const socios = ref(null);
-const customers3 = ref(null);
 const options = ref(['list', 'grid']);
 const layout = ref('list');
 
-function getSeverity(product) {
-    switch (product.inventoryStatus) {
-        case 'INSTOCK':
-            return 'success';
-
-        case 'LOWSTOCK':
-            return 'warning';
-
-        case 'OUTOFSTOCK':
-            return 'danger';
-
-        default:
-            return null;
-    }
-}
-
-const url = 'http://127.0.0.1:8000/api';
-
-async function pedirLista() {
-    try {
-        const response = await fetch(`${url}/socios`);
-
-        if (!response.ok) {
-            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
-        }
-        const data = await response.json();
-        socios.value = data.lista_socios;
-        for (const socio of socios.value) {
-            socio.propiedades = await codigoPropiedad(socio.id);
-        }
-        return socios.value;
-    } catch (error) {
-        console.error('Se produjo un error:', error.message);
-        errorMessage.value = 'Se produjo un error al intentar iniciar sesión. Inténtalo de nuevo.';
-        return [];
-    }
-}
-
-async function codigoPropiedad(socioId) {
-    try {
-        const response = await fetch(`${url}/propiedades/socio/${socioId}`);
-        if (!response.ok) {
-            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
-        }
-        const data = await response.json();
-        return data.propiedades;
-    } catch (error) {
-        console.error('Se produjo un error:', error.message);
-        return [];
-    }
-}
-
-onBeforeMount(async () => {
-    const listaSocios = await pedirLista();
-
+const loadSocios = async () => {
+    const listaSocios = await fetchListaSocios();
     if (listaSocios) {
-        customers3.value = listaSocios;
-        console.log(customers3.value);
+        socios.value = listaSocios;
     } else {
         console.error('No se pudo obtener la lista de socios.');
     }
-});
+};
+
+onBeforeMount(loadSocios);
 </script>
 
 <template>
@@ -76,17 +23,7 @@ onBeforeMount(async () => {
         <div class="card p-4 bg-white rounded-lg shadow-lg">
             <div class="font-semibold text-xl mb-6 text-gray-800">Lista de Socios</div>
 
-            <DataTable
-                :value="customers3"
-                rowGroupMode="subheader"
-                groupRowsBy="nombre_socio"
-                sortMode="single"
-                sortField="nombre_socio"
-                :sortOrder="1"
-                scrollable
-                scrollHeight="700px"
-                tableStyle="min-width: 50rem"
-            >
+            <DataTable :value="socios" rowGroupMode="subheader" groupRowsBy="nombre_socio" sortMode="single" sortField="nombre_socio" :sortOrder="1" scrollable scrollHeight="700px" tableStyle="min-width: 50rem">
                 <!-- Group header for each socio -->
                 <template #groupheader="slotProps">
                     <div class="bg-blue-100 p-4 rounded-md flex items-center gap-2 mb-4">
@@ -138,9 +75,14 @@ onBeforeMount(async () => {
 
 <style scoped>
 .card {
-    background-color: #ffffff;
-    border-radius: 8px;
-    padding: 20px;
+    background-color: var(--card-background-color);
+    color: var(--text-color);
+    box-shadow: 0 4px 6px var(--card-shadow-color);
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
 }
 
 .grid {
@@ -165,7 +107,9 @@ onBeforeMount(async () => {
 }
 
 .shadow-lg {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .bg-gray-50 {
@@ -191,6 +135,4 @@ onBeforeMount(async () => {
 .mb-6 {
     margin-bottom: 1.5rem;
 }
-
 </style>
-
