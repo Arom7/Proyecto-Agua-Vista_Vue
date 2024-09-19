@@ -1,13 +1,13 @@
 <script setup>
 import { onBeforeMount, onMounted, ref } from 'vue';
-import { fetchListaSocios } from '@/service/peticionesApi';
+import { fetchListaSociosPropiedades } from '@/service/peticionesApi';
 
 const socios = ref(null);
 const options = ref(['list', 'grid']);
 const layout = ref('list');
 
 const loadSocios = async () => {
-    const listaSocios = await fetchListaSocios();
+    const listaSocios = await fetchListaSociosPropiedades();
     if (listaSocios) {
         socios.value = listaSocios;
     } else {

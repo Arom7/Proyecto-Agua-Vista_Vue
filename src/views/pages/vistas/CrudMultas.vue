@@ -1,18 +1,23 @@
 <script setup>
+import { fetchListaMultas, fetchListaSocios, fetchListaPropiedades, fetchGuardarMulta} from '@/service/peticionesApi';
 import { ProductService } from '@/service/ProductService';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import { onMounted, ref } from 'vue';
-
-onMounted(() => {
-    obtenerMultas();
-});
+import { onBeforeMount, watch, ref } from 'vue';
 
 const multas = ref();
 const multa = ref({});
+const socio = ref({});
+const propiedad = ref({});
+const modalRegistroMultaSocio = ref(false);
 const modalRegistroMulta = ref(false);
 const actualizacionMulta = ref(false);
 let idMulta;
+const sociosListaBox = ref([]);
+const multasListaBox = ref([]);
+const propiedadesValues = ref([]);
+const selectedSocio = ref(null);
+const selectedMulta = ref(null);
 
 const toast = useToast();
 const dt = ref();
@@ -26,11 +31,7 @@ const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
 const submitted = ref(false);
-const statuses = ref([
-    { label: 'INSTOCK', value: 'instock' },
-    { label: 'LOWSTOCK', value: 'lowstock' },
-    { label: 'OUTOFSTOCK', value: 'outofstock' }
-]);
+
 
 function formatCurrency(value) {
     if (value) return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -48,27 +49,6 @@ function deleteProduct() {
     deleteProductDialog.value = false;
     product.value = {};
     toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
-}
-
-function findIndexById(id) {
-    let index = -1;
-    for (let i = 0; i < products.value.length; i++) {
-        if (products.value[i].id === id) {
-            index = i;
-            break;
-        }
-    }
-
-    return index;
-}
-
-function createId() {
-    let id = '';
-    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (var i = 0; i < 5; i++) {
-        id += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return id;
 }
 
 function exportCSV() {
@@ -105,19 +85,22 @@ function getStatusLabel(status) {
 //getter para multas
 const url = 'http://127.0.0.1:8000/api';
 
-async function obtenerMultas() {
-    try {
-        const response = await fetch(`${url}/multas`);
-        if (!response.ok) {
-            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
-        }
-        const data = await response.json();
-        multas.value = data.multas;
-    } catch (error) {
-        console.error('Se produjo un error:', error.message);
-        errorMessage.value = 'Se produjo un error al extraer los datos.';
+const loadMultas = async () => {
+    const listaMultas = await fetchListaMultas();
+    if (listaMultas) {
+        multas.value = listaMultas;
+    } else {
+        console.error('No se pudo obtener la lista de multas.');
     }
-}
+};
+
+onBeforeMount(loadMultas);
+
+watch(socio, (newSocio) => {
+    if (newSocio) {
+        listaPropiedades(newSocio.code);
+    }
+});
 
 /**
  * Funciones metodos post (registro de tipos de multas)
@@ -134,6 +117,54 @@ function registrarNuevaMulta() {
 function hideDialog() {
     modalRegistroMulta.value = false;
     submitted.value = false;
+}
+
+function cerrarModal() {
+    modalRegistroMultaSocio.value = false;
+    submitted.value = false;
+}
+
+function registrarMultaSocio() {
+    asignarSocios();
+    asignarMultas();
+    modalRegistroMultaSocio.value = true;
+}
+
+async function listaPropiedades(id_socio){
+    console.log(id_socio);
+    const listaPropiedades = await fetchListaPropiedades(id_socio);
+    if (listaPropiedades) {
+        propiedadesValues.value = listaPropiedades.map((item) => ({
+            name: item.descripcion_propiedad,
+            code: item.id
+        }));
+    } else {
+        console.error('No se pudo obtener la lista de propiedades.');
+    }
+}
+
+async function asignarSocios() {
+    const listaSocios = await fetchListaSocios();
+    if (listaSocios) {
+        sociosListaBox.value = listaSocios.map((item) => ({
+            name: item.nombre_socio + ' ' + item.primer_apellido_socio + ' ' + item.segundo_apellido_socio,
+            code: item.id
+        }));
+    } else {
+        console.error('No se pudo obtener la lista de socios.');
+    }
+}
+
+async function asignarMultas(){
+    const listaMultas = await fetchListaMultas();
+    if (listaMultas) {
+        multasListaBox.value = listaMultas.map((item) => ({
+            criterio_infraccion: item.criterio_infraccion,
+            code: item.id
+        }));
+    } else {
+        console.error('No se pudo obtener la lista de socios.');
+    }
 }
 
 //Metodo post para registrar la multa
@@ -201,6 +232,28 @@ async function actualizarMulta() {
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
     }
 }
+
+/**
+ * Funcion para agregar una multa a una propiedad de un socio
+ */
+async function registrarMultaPropiedadSocio() {
+    try{
+        const data = {
+            id_multa: multa.value.code,
+            id_propiedad: propiedad.value.code
+        }
+        const respuesta = await fetchGuardarMulta(data);
+        if(respuesta.status !== 200){
+            throw new Error('Error al intentar registrar la multa al propietario');
+        }
+        cerrarModal();
+    }
+    catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    }
+}
+
 </script>
 
 <template>
@@ -209,6 +262,7 @@ async function actualizarMulta() {
             <Toolbar class="mb-6">
                 <template #start>
                     <Button label="Registrar nueva multa" icon="pi pi-plus" severity="secondary" class="mr-2" @click="registrarNuevaMulta" />
+                    <Button label="Agregar multa a una propiedad" icon="pi pi-plus" severity="secondary" class="mr-2" @click="registrarMultaSocio"></Button>
                     <Button label="Eliminar" icon="pi pi-trash" severity="secondary" @click="confirmDeleteSelected" :disabled="!selectedProducts || !selectedProducts.length" />
                 </template>
 
@@ -264,7 +318,7 @@ async function actualizarMulta() {
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="modalRegistroMulta" :style="{ width: '450px' }" header="Actualizacion de multa" :modal="true">
+        <Dialog v-model:visible="modalRegistroMulta" :style="{ width: '450px' }" header="Registrar multa" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="criterio_infraccion" class="block font-bold mb-3">Infraccion : </label>
@@ -290,6 +344,37 @@ async function actualizarMulta() {
                     :disabled="!multa.criterio_infraccion || !multa.descripcion_infraccion || !multa.monto_infraccion"/>
             </template>
         </Dialog>
+
+        <Dialog v-model:visible="modalRegistroMultaSocio" :style="{ width: '450px' }" header="Asignar una multa a un propietario" :modal="true">
+            <div class="flex flex-col gap-6">
+                <div>
+                    <label for="criterio_infraccion" class="block font-bold mb-3">Lista de socios : </label>
+                    <Listbox v-model="socio" :options="sociosListaBox" optionLabel="name" :filter="true" />
+                    <small v-if="submitted && !multa.criterio_infraccion" class="text-red-500">El socio es requerido.</small>
+                    <Message severity="secondary" v-if="socio">Socio seleccionado: {{ socio.name }}</Message>
+                </div>
+                <div>
+                    <label for="description_infraccion" class="block font-bold mb-3">Lista de infracciones : </label>
+                    <Listbox v-model="multa" :options="multasListaBox" optionLabel="criterio_infraccion" :filter="true" />
+                    <small v-if="submitted && !multa.descripcion_infraccion" class="text-red-500">La infraccion es requerida.</small>
+                    <Message severity="secondary" v-if="multa">Multa seleccionada: {{ multa.criterio_infraccion }}</Message>
+                </div>
+                <div>
+                    <label for="description_infraccion" class="block font-bold mb-3">Codigo de propiedad : </label>
+                    <Select v-model="propiedad" :options="propiedadesValues" optionLabel="code" placeholder="Select" />
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Cancelar" icon="pi pi-times" text @click="cerrarModal" />
+                <Button
+                    label="Guardar"
+                    icon="pi pi-check"
+                    @click="registrarMultaPropiedadSocio"
+                    />
+            </template>
+        </Dialog>
+
+
 
         <Dialog v-model:visible="deleteProductDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">

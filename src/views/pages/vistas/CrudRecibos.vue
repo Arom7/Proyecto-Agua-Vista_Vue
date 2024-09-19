@@ -2,7 +2,8 @@
 import { ProductService } from '@/service/ProductService';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import { onMounted, ref, watch } from 'vue';
+import { onBeforeMount,onMounted, ref, watch } from 'vue';
+import { fetchListaRecibos } from '@/service/peticionesApi';
 
 //variables reactivas
 
@@ -69,28 +70,35 @@ function deleteSelectedProducts() {
 
 
 /**
- * Codigo organizado por peticion get, involucra recibos y se actualizan ante lo requerido
+ * Funcion para cargar los recibos
  */
-// Url de respuesta
-const url = 'http://127.0.0.1:8000/api';
 
-onMounted(() => {
-    visualizaRecibos();
-});
+const loadRecibos = async () => {
+    const listaRecibos = await fetchListaRecibos();
+    if (listaRecibos) {
+        recibos.value = listaRecibos;
+    } else {
+        console.error('No se pudo obtener la lista de recibos.');
+    }
+};
 
-async function visualizaRecibos() {
-    try {
-        const response = await fetch(`${url}/recibos`);
-        if (!response.ok) {
-            throw new Error(`Error en la solicitud: ${response.status}`);
-        }
-        const data = await response.json();
-        recibos.value = data.recibos;
-    } catch (error) {
-        console.error('Se produjo un error:', error.message);
+// Funcion para status recibo (pagado o endeudado)
+function getEstadoLabel(status) {
+    switch (status) {
+        case 1:
+            return 'success';
+        case 0:
+            return 'danger';
+        default:
+            return null;
     }
 }
-// funcion para la peticion get
+
+onBeforeMount(loadRecibos);
+
+const url = 'http://127.0.0.1:8000/api';
+
+// funcion para la peticion post
 function formatoFecha(date) {
     if (!date || !(date instanceof Date)) {
         console.error('Fecha inválida:', date);
@@ -110,7 +118,6 @@ async function guardarRecibo() {
         recibo.value.mes_correspondiente = formatoFecha(recibo.value.mes_correspondiente);
         recibo.value.id_socio = socio.value.code;
 
-        console.log(recibo.value);
         const response = await fetch(`${url}/recibos`, {
             method: 'POST',
             body: JSON.stringify(recibo.value),
@@ -131,17 +138,7 @@ async function guardarRecibo() {
     }
 }
 
-// Funcion para estados
-function getEstadoLabel(status) {
-    switch (status) {
-        case 1:
-            return 'success';
-        case 0:
-            return 'danger';
-        default:
-            return null;
-    }
-}
+
 // para generar PDF posteriomente
 function exportCSV() {
     dt.value.exportCSV();
@@ -187,8 +184,8 @@ async function obtenerSocios() {
         }
         const data = await response.json();
         sociosListaBox.value = data.lista_socios.map((item) => ({
-            name: item.nombre_socio + ' ' + item.primer_apellido_socio + ' ' + item.segundo_apellido_socio, // Ajusta los campos según la estructura de tu API
-            code: item.id // Ajusta este campo también
+            name: item.nombre_socio + ' ' + item.primer_apellido_socio + ' ' + item.segundo_apellido_socio,
+            code: item.id
         }));
     } catch (error) {
         console.error('Se produjo un error:', error.message);
