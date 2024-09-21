@@ -116,10 +116,55 @@ export async function fetchGuardarMulta(datos) {
             const problema = await response.json();
             throw new Error(`Error en la solicitud: ${response.status} ${response.statusText} mensaje: ${problema.message}`);
         }
-
         return await response.json();
     } catch (error) {
         console.error('Se produjo un error:', error.message);
         throw error;
     }
 }
+
+/**
+ * Petición POST para registrar una nueva multa.
+ * @returns {Promise<Array>}
+ */
+
+export async function fetchRegistrarMulta(data) {
+    try {
+        const response = await fetch(`${url}/multas`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: {
+                'Content-type': 'application/json;'
+            }
+        });
+        if (!response.ok) {
+            const problema = await response.json();
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText} mensaje: ${problema.message}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        throw error;
+    }
+}
+
+export async function fetchActualizacionMulta(idMulta, multa) {
+    try {
+        const response = await fetch(`${url}/multas/${idMulta}`, {
+            method: 'PUT',
+            body: JSON.stringify(multa),
+            headers: {
+                'Content-type': 'application/json;'
+            }
+        });
+        if (!response.ok) {
+            const problema = await response.json();
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText} mensaje: ${problema.message}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    }
+}
+

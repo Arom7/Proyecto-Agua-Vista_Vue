@@ -122,6 +122,15 @@ const router = createRouter({
                     path:'/multas',
                     name: 'crudMultas',
                     component : () => import('@/views/pages/vistas/CrudMultas.vue')
+                },
+                {
+                    path: '/reportes/deudas',
+                    name: 'reporteDeudas',
+                    component: () => import('@/views/pages/vistas/ReporteDeudas.vue')
+                },{
+                    path: '/reportes/pagos',
+                    name: 'reportePagos',
+                    component: () => import('@/views/pages/vistas/ReportePagos.vue')
                 }
             ]
         },

@@ -1,6 +1,5 @@
 <script setup>
-import { fetchListaMultas, fetchListaSocios, fetchListaPropiedades, fetchGuardarMulta} from '@/service/peticionesApi';
-import { ProductService } from '@/service/ProductService';
+import { fetchListaMultas, fetchListaSocios, fetchListaPropiedades, fetchGuardarMulta, fetchRegistrarMulta, fetchActualizacionMulta} from '@/service/peticionesApi';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { onBeforeMount, watch, ref } from 'vue';
@@ -12,21 +11,21 @@ const propiedad = ref({});
 const modalRegistroMultaSocio = ref(false);
 const modalRegistroMulta = ref(false);
 const actualizacionMulta = ref(false);
-let idMulta;
 const sociosListaBox = ref([]);
 const multasListaBox = ref([]);
 const propiedadesValues = ref([]);
 const selectedSocio = ref(null);
 const selectedMulta = ref(null);
+const modalEliminacionMulta = ref(false);
+let idMulta;
 
 const toast = useToast();
 const dt = ref();
 const products = ref();
 
-const deleteProductDialog = ref(false);
+
 const deleteProductsDialog = ref(false);
 const product = ref({});
-const selectedProducts = ref();
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
@@ -39,16 +38,15 @@ function formatCurrency(value) {
 }
 
 
-function confirmDeleteProduct(prod) {
-    product.value = prod;
-    deleteProductDialog.value = true;
+function eliminarMulta(datos) {
+    console.log(datos);
+    multa.value = datos;
+    console.log(multa.value);
+    modalEliminacionMulta.value = true;
 }
 
-function deleteProduct() {
-    products.value = products.value.filter((val) => val.id !== product.value.id);
-    deleteProductDialog.value = false;
-    product.value = {};
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
+function deleteMulta() {
+    //Aun falta desarrollar el backend para eliminar una multa
 }
 
 function exportCSV() {
@@ -57,13 +55,6 @@ function exportCSV() {
 
 function confirmDeleteSelected() {
     deleteProductsDialog.value = true;
-}
-
-function deleteSelectedProducts() {
-    products.value = products.value.filter((val) => !selectedProducts.value.includes(val));
-    deleteProductsDialog.value = false;
-    selectedProducts.value = null;
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
 }
 
 function getStatusLabel(status) {
@@ -82,9 +73,7 @@ function getStatusLabel(status) {
     }
 }
 
-//getter para multas
-const url = 'http://127.0.0.1:8000/api';
-
+//Funciones para la carga de datos de multas
 const loadMultas = async () => {
     const listaMultas = await fetchListaMultas();
     if (listaMultas) {
@@ -131,7 +120,6 @@ function registrarMultaSocio() {
 }
 
 async function listaPropiedades(id_socio){
-    console.log(id_socio);
     const listaPropiedades = await fetchListaPropiedades(id_socio);
     if (listaPropiedades) {
         propiedadesValues.value = listaPropiedades.map((item) => ({
@@ -176,20 +164,12 @@ async function registrarMulta() {
             await actualizarMulta();
             return;
         }
-        const response = await fetch(`${url}/multas`, {
-            method: 'POST',
-            body: JSON.stringify(multa.value),
-            headers: {
-                'Content-type': 'application/json;'
-            }
-        });
+        const response = await fetchRegistrarMulta(multa.value);
         console.log(response);
-        if (!response.ok) {
-            const problema = await response.json();
-            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText} mensaje: ${problema.message}`);
+        if (response.status != 200) {
+            throw new Error(`Error en la solicitud mensaje.`);
         }
         hideDialog();
-        obtenerMultas();
     } catch (error) {
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
@@ -211,22 +191,12 @@ function editarMulta(data) {
 //Metodo put para actualizar una multa
 async function actualizarMulta() {
     try {
-        console.log(multa.value);
         submitted.value = true;
-        const response = await fetch(`${url}/multas/${idMulta}`, {
-            method: 'PUT',
-            body: JSON.stringify(multa.value),
-            headers: {
-                'Content-type': 'application/json;'
-            }
-        });
-        console.log(response);
-        if (!response.ok) {
-            const problema = await response.json();
-            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText} mensaje: ${problema.message}`);
+        const response = await fetchActualizacionMulta(idMulta , multa.value);
+        if (response.status != 200) {
+            throw new Error(`Error en la solicitud, mensaje: ${response.message}`);
         }
         hideDialog();
-        obtenerMultas();
     } catch (error) {
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
@@ -253,7 +223,6 @@ async function registrarMultaPropiedadSocio() {
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
     }
 }
-
 </script>
 
 <template>
@@ -263,7 +232,6 @@ async function registrarMultaPropiedadSocio() {
                 <template #start>
                     <Button label="Registrar nueva multa" icon="pi pi-plus" severity="secondary" class="mr-2" @click="registrarNuevaMulta" />
                     <Button label="Agregar multa a una propiedad" icon="pi pi-plus" severity="secondary" class="mr-2" @click="registrarMultaSocio"></Button>
-                    <Button label="Eliminar" icon="pi pi-trash" severity="secondary" @click="confirmDeleteSelected" :disabled="!selectedProducts || !selectedProducts.length" />
                 </template>
 
                 <template #end>
@@ -273,7 +241,6 @@ async function registrarMultaPropiedadSocio() {
 
             <DataTable
                 ref="dt"
-                v-model:selection="selectedProducts"
                 :value="multas"
                 dataKey="id"
                 :paginator="true"
@@ -294,9 +261,7 @@ async function registrarMultaPropiedadSocio() {
                         </IconField>
                     </div>
                 </template>
-
-                <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-                <Column field="id" header="Id de la multa" sortable style="min-width: 8rem"></Column>
+                <Column field="id" header="Id de la multa" sortable style="min-width: 10rem"></Column>
                 <Column field="criterio_infraccion" header="Infraccion" sortable style="min-width: 10em"></Column>
                 <Column field="descripcion_infraccion" header="Descripcion" sortable style="min-width: 16em"></Column>
                 <Column field="monto_infraccion" header="Monto" sortable style="min-width: 8rem">
@@ -312,7 +277,7 @@ async function registrarMultaPropiedadSocio() {
                 <Column :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editarMulta(slotProps.data)" />
-                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteProduct(slotProps.data)" />
+                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="eliminarMulta(slotProps.data)" />
                     </template>
                 </Column>
             </DataTable>
@@ -374,30 +339,17 @@ async function registrarMultaPropiedadSocio() {
             </template>
         </Dialog>
 
-
-
-        <Dialog v-model:visible="deleteProductDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
+        <Dialog v-model:visible="modalEliminacionMulta" :style="{ width: '450px' }" header="Confirm" :modal="true">
             <div class="flex items-center gap-4">
                 <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product"
-                    >Are you sure you want to delete <b>{{ product.name }}</b
+                <span v-if="multa"
+                    >Seguro que quieres eliminar la siguiente multa: <b>{{ multa.criterio_infraccion }}</b
                     >?</span
                 >
             </div>
             <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteProductDialog = false" />
-                <Button label="Yes" icon="pi pi-check" @click="deleteProduct" />
-            </template>
-        </Dialog>
-
-        <Dialog v-model:visible="deleteProductsDialog" :style="{ width: '450px' }" header="Confirm" :modal="true">
-            <div class="flex items-center gap-4">
-                <i class="pi pi-exclamation-triangle !text-3xl" />
-                <span v-if="product">Are you sure you want to delete the selected products?</span>
-            </div>
-            <template #footer>
-                <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
-                <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedProducts" />
+                <Button label="No" icon="pi pi-times" text @click="modalEliminacionMulta = false" />
+                <Button label="Yes" icon="pi pi-check" @click="deleteMulta" />
             </template>
         </Dialog>
     </div>
