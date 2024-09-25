@@ -148,6 +148,13 @@ export async function fetchRegistrarMulta(data) {
     }
 }
 
+
+
+/**
+ * Petición PUT para actualizar una multa.
+ * @returns {Promise<Array>}
+ */
+
 export async function fetchActualizacionMulta(idMulta, multa) {
     try {
         const response = await fetch(`${url}/multas/${idMulta}`, {
