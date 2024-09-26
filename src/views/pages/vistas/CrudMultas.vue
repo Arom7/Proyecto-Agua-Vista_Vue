@@ -221,6 +221,7 @@ async function registrarMultaPropiedadSocio() {
     catch (error) {
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar el socio' , detail: error.message , life: 3000 });
     }
 }
 </script>

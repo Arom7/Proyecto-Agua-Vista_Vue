@@ -63,34 +63,45 @@ function getEstadoLabel(status) {
                     <i class="pi pi-fw pi-credit-card text-blue-700"></i>
                     <span class="font-medium text-gray-700">{{ slotProps.data.ci_socio }}</span>
                     <i class="pi pi-fw pi-user text-blue-700"></i>
-                    <span><Message severity="info">{{ slotProps.data.nombre_socio }}</Message></span>
+                    <span
+                        ><Message severity="info">{{ slotProps.data.nombre_socio }}</Message></span
+                    >
                 </div>
             </template>
             <Column field="nombre_socio" header="Nombre del socio"></Column>
             <Column field="propiedades" header="Lista de recibos" style="min-width: 200px">
                 <template #body="slotProps">
-                    <div v-for="(propiedad, index) in slotProps.data.propiedades" :key="index">
-                        <div class="flex items-center gap-2 mb-2">
-                            <span><Message severity="secondary">{{ propiedad.id }}  </Message></span>
-                            <span><Message severity="secondary">{{propiedad.descripcion_propiedad}}</Message></span>
-                        </div>
-                        <div v-if="propiedad.recibos && propiedad.recibos.length">
-                            <div class="recibo-header mb-2">
-                                <div># de Recibo</div>
-                                <div>Total de recibo</div>
-                                <div>Estado de pago</div>
+                    <div v-if="slotProps.data.propiedades && slotProps.data.propiedades.length > 0">
+                        <div v-for="(propiedad, index) in slotProps.data.propiedades" :key="index">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span
+                                    ><Message severity="secondary">{{ propiedad.id }} </Message></span
+                                >
+                                <span
+                                    ><Message severity="secondary">{{ propiedad.descripcion_propiedad }}</Message></span
+                                >
                             </div>
-                            <div v-for="(recibo, reciboIndex) in propiedad.recibos" :key="reciboIndex" class="recibo-item mb-2">
-                                <div>{{ recibo.id }}</div>
-                                <div>{{ recibo.total }}</div>
-                                <div>
-                                    <Tag :value="recibo.estado_pago == 1 ? 'Pagado' : 'Endeudado'" :severity="getEstadoLabel(recibo.estado_pago)" />
+                            <div v-if="propiedad.recibos && propiedad.recibos.length">
+                                <div class="recibo-header mb-2">
+                                    <div># de Recibo</div>
+                                    <div>Total de recibo</div>
+                                    <div>Estado de pago</div>
+                                </div>
+                                <div v-for="(recibo, reciboIndex) in propiedad.recibos" :key="reciboIndex" class="recibo-item mb-2">
+                                    <div>{{ recibo.id }}</div>
+                                    <div>{{ recibo.total }}</div>
+                                    <div>
+                                        <Tag :value="recibo.estado_pago == 1 ? 'Pagado' : 'Endeudado'" :severity="getEstadoLabel(recibo.estado_pago)" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="mb-3" v-else>
-                            <Button label="No se tiene recibos registrados" severity="danger" text />
+                            <div class="mb-3" v-else>
+                                <Button label="No se tiene recibos registrados" severity="danger" text />
                             </div>
+                        </div>
+                    </div>
+                    <div class="mb-3" v-else>
+                        <Button label="No se tiene propiedades ni recibos registrados" severity="danger" text />
                     </div>
                 </template>
             </Column>

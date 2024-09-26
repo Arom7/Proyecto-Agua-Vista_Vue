@@ -33,24 +33,26 @@ async function registrarNuevoSocio() {
             primer_apellido_socio: socio.value.primer_apellido_socio,
             segundo_apellido_socio: socio.value.segundo_apellido_socio,
             ci_socio: socio.value.ci_socio,
-            username: socio.value.username,
             email: socio.value.email,
             contrasenia: socio.value.contrasenia,
             confirmar_contrasenia: socio.value.confirmar_contrasenia
         };
 
-        //Verificar si las contraseñas coinciden para enviar el formulario
-        //Para el username generaremos uno automaticamente en el backend para evitar duplicados (Considerar estas ideas)
-
-        console.log('Data:', data);
-        const respuesta = await fetchRegistrarNuevoSocio(data);
-        if (respuesta.status !== 200) {
-            throw new Error('Error al intentar registrar la multa al propietario');
+        if (data.contrasenia !== data.confirmar_contrasenia) {
+            throw new Error('Las contraseñas no coinciden.');
         }
+
+        const respuesta = await fetchRegistrarNuevoSocio(data);
+        if (respuesta.status < 200 && respuesta.status >= 300) {
+            console.log('Error al intentar registrar al nuevo socio:', respuesta);
+            throw new Error('Error al intentar registrar al nuevo socio.');
+        }
+
         cerrarModal();
     } catch (error) {
-        console.error('Se produjo un error:', error.message);
+        console.error('Se produjo un error:', error.message, error.errores);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar el socio', detail: error.message, life: 3000 });
     }
 }
 
@@ -94,10 +96,10 @@ function cerrarModal() {
                 </template>
             </Toolbar>
 
-            <DataTable :value="socios" rowGroupMode="subheader" groupRowsBy="nombre_socio" sortMode="single" sortField="nombre_socio" :sortOrder="1" scrollable scrollHeight="700px" tableStyle="min-width: 50rem">
+            <DataTable :value="socios" rowGroupMode="subheader" groupRowsBy="nombre_socio" sortMode="single" sortField="nombre_socio" :sortOrder="1" scrollable scrollHeight="590px" tableStyle="min-width: 50rem">
                 <!-- Group header for each socio -->
                 <template #groupheader="slotProps">
-                    <div class="p-2 flex items-center gap-2 mb-3">
+                    <div class="p-2 flex items-center gap-2 mb-1">
                         <i class="pi pi-fw pi-credit-card"></i>
                         <span class="font-medium">{{ slotProps.data.ci_socio }}</span>
                         <i class="pi pi-fw pi-user"></i>
@@ -106,17 +108,22 @@ function cerrarModal() {
                 </template>
 
                 <!-- Data columns -->
-                <div class="grid grid-cols-4 gap-4 p-4 rounded-md mb-4">
+                <div class="grid grid-cols-4 gap-4 p-4 rounded-md mb-3">
                     <Column field="propiedades" header="Lista de propiedades" style="min-width: 150px">
                         <template #body="slotProps">
-                            <div v-for="(propiedad, index) in slotProps.data.propiedades" :key="index" class="pt-2 px-4 mx-12 rounded-lg shadow-sm">
-                                <div class="flex items-center gap-2 mx-5">
-                                    <span>
-                                        <Chip icon="pi pi-facebook" class="mr-2 mb-2"> Codigo de propiedad : {{ propiedad.id }} </Chip>
-                                        <Chip icon="pi pi-facebook" class="mr-2 mb-2"> Descripcion de la propiedad : {{ propiedad.descripcion_propiedad }} </Chip>
-                                        <Chip icon="pi pi-facebook" class="mr-2 mb-2"> Ubicacion : {{ propiedad.cuadra_propiedad }} </Chip>
-                                    </span>
+                            <div v-if="slotProps.data.propiedades && slotProps.data.propiedades.length > 0">
+                                <div v-for="(propiedad, index) in slotProps.data.propiedades" :key="index" class="pt-2 px-4 mx-12 rounded-lg shadow-sm">
+                                    <div class="flex items-center gap-2 mx-5">
+                                        <span>
+                                            <Chip icon="pi pi-facebook" class="mr-2 mb-2"> Codigo de propiedad : {{ propiedad.id }} </Chip>
+                                            <Chip icon="pi pi-facebook" class="mr-2 mb-2"> Descripcion de la propiedad : {{ propiedad.descripcion_propiedad }} </Chip>
+                                            <Chip icon="pi pi-facebook" class="mr-2 mb-2"> Ubicacion : {{ propiedad.cuadra_propiedad }} </Chip>
+                                        </span>
+                                    </div>
                                 </div>
+                            </div>
+                            <div v-else>
+                                <span> <Button label="No tiene propiedades registradas." severity="danger" text /></span>
                             </div>
                         </template>
                     </Column>
@@ -157,13 +164,14 @@ function cerrarModal() {
                 <div class="flex gap-4">
                     <div class="w-1/2">
                         <div class="font-semibold text-xl mb-2">Contraseña:</div>
-                        <Password id="contrasenia" v-model="socio.contrasenia" placeholder="Password" :toggleMask="true" class="mb-4" fluid feedback></Password>
+                        <Password id="contrasenia" v-model="socio.contrasenia" placeholder="Password" :toggleMask="true" class="mb-4" fluid feedback :invalid="!socio.contrasenia"></Password>
+                        <small v-if="!socio.contrasenia" class="text-red-500">Ingrese una contraseña.</small>
                     </div>
                     <div class="w-1/2">
                         <div class="font-semibold text-xl mb-2">Confirmar contraseña:</div>
                         <Password id="contrasenia" v-model="socio.confirmar_contrasenia" placeholder="Password" :toggleMask="true" class="mb-4" fluid :feedback="false"></Password>
                         <small v-if="socio.contrasenia !== socio.confirmar_contrasenia" class="text-red-500">Las contraseñas no coinciden.</small>
-                        <small v-if="socio.contrasenia === socio.confirmar_contrasenia" class="text-green-500">Las contraseñas coinciden.</small>
+                        <small v-else-if="socio.contrasenia === socio.confirmar_contrasenia && socio.contrasenia && socio.confirmar_contrasenia" class="text-green-500">Las contraseñas coinciden.</small>
                     </div>
                 </div>
             </div>
