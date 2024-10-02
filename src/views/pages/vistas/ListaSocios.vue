@@ -1,6 +1,7 @@
 <script setup>
 import { onBeforeMount, onMounted, ref } from 'vue';
-import { fetchListaSociosPropiedades } from '@/service/peticionesApi';
+import { useToast } from 'primevue/usetoast';
+import { fetchListaSociosPropiedadesUsuarios } from '@/service/peticionesApi';
 import { fetchRegistrarNuevoSocio } from '@/service/PeticionesApiPost';
 
 const socios = ref(null);
@@ -10,10 +11,12 @@ const layout = ref('list');
 const modalRegistroNuevaPropiedad = ref(false);
 const submitted = ref(false);
 const password = ref('');
+const toast = useToast();
 
 const loadSocios = async () => {
-    const listaSocios = await fetchListaSociosPropiedades();
+    const listaSocios = await fetchListaSociosPropiedadesUsuarios();
     if (listaSocios) {
+        console.log('Lista de socios:', listaSocios);
         socios.value = listaSocios;
     } else {
         console.error('No se pudo obtener la lista de socios.');
@@ -43,16 +46,17 @@ async function registrarNuevoSocio() {
         }
 
         const respuesta = await fetchRegistrarNuevoSocio(data);
-        if (respuesta.status < 200 && respuesta.status >= 300) {
-            console.log('Error al intentar registrar al nuevo socio:', respuesta);
-            throw new Error('Error al intentar registrar al nuevo socio.');
-        }
 
-        cerrarModal();
+        if (!respuesta.status === 201) {
+            throw new Error('Error al intentar registrar al nuevo socio.');
+        } else {
+            cerrarModal();
+            await loadSocios();
+            toast.add({ severity: 'success', summary: 'Socio registrado', detail: 'El socio se registro correctamente.', life: 5000 });
+        }
     } catch (error) {
+        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar el socio', detail: 'Error al intentar registrar al nuevo socio.', life: 3000 });
         console.error('Se produjo un error:', error.message, error.errores);
-        errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
-        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar el socio', detail: error.message, life: 3000 });
     }
 }
 
@@ -104,6 +108,17 @@ function cerrarModal() {
                         <span class="font-medium">{{ slotProps.data.ci_socio }}</span>
                         <i class="pi pi-fw pi-user"></i>
                         <span>{{ slotProps.data.nombre_socio }} {{ slotProps.data.primer_apellido_socio }} {{ slotProps.data.segundo_apellido_socio }}</span>
+
+                        <div v-for="(usuario, index) in slotProps.data.usuarios" :key="index" class="pt-2 px-4 mx-12 rounded-lg shadow-sm">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span>
+                                    <i class="pi pi-fw pi-id-card text-4xl"></i>
+                                    <Button :label="'Username: ' + slotProps.data.usuarios[0].username" severity="Success" text />
+                                </span>
+                            </div>
+                        </div>
+
+
                     </div>
                 </template>
 
@@ -153,6 +168,7 @@ function cerrarModal() {
                         <InputText id="ci_socio" type="text" v-model="socio.ci_socio" class="w-3/5" />
                         <label for="ci_socio">El carnet puede contener letras</label>
                     </FloatLabel>
+                    <small v-if="submitted && !socio.ci_socio" class="text-red-500 mx-2">Este campo es requerido.</small>
                 </div>
                 <div>
                     <div class="font-semibold text-xl mb-6">Correo o Gmail del usuario :</div>
@@ -160,12 +176,13 @@ function cerrarModal() {
                         <InputText id="email" type="text" v-model="socio.email" class="w-full" />
                         <label for="email">El correo debe contener el formato correo@gmail.com</label>
                     </FloatLabel>
+                    <small v-if="submitted && !socio.email" class="text-red-500 mx-2">Este campo es requerido.</small>
                 </div>
                 <div class="flex gap-4">
                     <div class="w-1/2">
                         <div class="font-semibold text-xl mb-2">Contraseña:</div>
                         <Password id="contrasenia" v-model="socio.contrasenia" placeholder="Password" :toggleMask="true" class="mb-4" fluid feedback :invalid="!socio.contrasenia"></Password>
-                        <small v-if="!socio.contrasenia" class="text-red-500">Ingrese una contraseña.</small>
+                        <small v-if="submitted && !socio.contrasenia" class="text-red-500 mx-2">Ingrese una contraseña.</small>
                     </div>
                     <div class="w-1/2">
                         <div class="font-semibold text-xl mb-2">Confirmar contraseña:</div>

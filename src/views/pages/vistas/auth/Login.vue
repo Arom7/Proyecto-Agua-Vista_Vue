@@ -2,35 +2,35 @@
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { fetchAccesoSocios } from '@/service/PeticionesApiPost';
+import { useToast } from 'primevue/usetoast';
+
+
 // atributos
+const toast = useToast();
 const username = ref('');
 const contrasenia = ref('');
 const errorMessage = ref('');
 const checked = ref(false);
 const router = useRouter();
 const url = 'http://127.0.0.1:8000/api';
+let data = {
+    username: '',
+    contrasenia: ''
+};
+
 
 async function enviarSesion() {
-    let datos = {
-        username: username.value,
-        contrasenia: contrasenia.value
-    };
+
+    data.username = username.value;
+    data.contrasenia = contrasenia.value;
+
     try {
-        const response = await fetch(`${url}/ingreso-cuentas`, {
-            method: 'POST',
-            body: JSON.stringify(datos),
-            headers: {
-                'Content-type': 'application/json;'
-            }
-        });
-        console.log(response);
-        if (!response.ok) {
-            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
-        }
-        const data = await response.json();
-        if (data.status === 200) {
+        const response = await fetchAccesoSocios(data);
+        if (response.status === 200) {
             router.push('/dashboard');
         }else{
+            toast.add({ severity: 'error', summary: 'Error Message', detail: 'Message Detail', life: 3000 });
             errorMessage.value = 'Error: ' + (data.message || 'Solicitud fallida');
         }
     } catch (error) {

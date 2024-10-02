@@ -4,7 +4,7 @@ const url = 'http://127.0.0.1:8000/api';
  * Peticion GET para obtener la lista de socios con sus respectivas propiedades.
  * @returns {Promise<Array>}
  */
-export async function fetchListaSociosPropiedades() {
+export async function fetchListaSociosPropiedadesUsuarios() {
     try {
         const response = await fetch(`${url}/propiedades/socios`);
         if (!response.ok) {
@@ -19,8 +19,9 @@ export async function fetchListaSociosPropiedades() {
     }
 }
 
-/*
+/**
  *  Petición GET para obtener lista de socios.
+ *  @returns {Promise<Array>}
  */
 
 export async function fetchListaSocios() {
@@ -170,6 +171,20 @@ export async function fetchActualizacionMulta(idMulta, multa) {
         }
         return await response.json();
     } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    }
+}
+
+export async function fetchBusquedaPropiedadSocio(id_medidor) {
+    try{
+        const response = await fetch(`${url}/busqueda-medidor/propiedades/${id_medidor}`);
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.medidor.propiedad;
+    }catch(error){
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
     }
