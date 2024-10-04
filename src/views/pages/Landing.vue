@@ -1,10 +1,38 @@
 <script setup>
+import { FotosService } from '@/service/FotosServiceOtb';
+import { onMounted, ref } from 'vue';
+
+const images = ref([]);
+
 function smoothScroll(id) {
     document.body.click();
     document.querySelector(id).scrollIntoView({
         behavior: 'smooth'
     });
 }
+
+onMounted(() => {
+    FotosService.getImages().then((data) => (images.value = data));
+});
+
+const galleriaResponsiveOptions = ref([
+    {
+        breakpoint: '1024px',
+        numVisible: 5
+    },
+    {
+        breakpoint: '960px',
+        numVisible: 4
+    },
+    {
+        breakpoint: '768px',
+        numVisible: 3
+    },
+    {
+        breakpoint: '560px',
+        numVisible: 1
+    }
+]);
 </script>
 
 <template>
@@ -44,17 +72,12 @@ function smoothScroll(id) {
                     <ul class="list-none p-0 m-0 flex lg:items-center select-none flex-col lg:flex-row cursor-pointer gap-8">
                         <li>
                             <a @click="smoothScroll('#hero')" class="px-0 py-4 text-surface-900 dark:text-surface-0 font-medium text-xl">
-                                <span>Home</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a @click="smoothScroll('#features')" class="px-0 py-4 text-surface-900 dark:text-surface-0 font-medium text-xl">
-                                <span>Features</span>
+                                <span>Presentacion</span>
                             </a>
                         </li>
                         <li>
                             <a @click="smoothScroll('#highlights')" class="px-0 py-4 text-surface-900 dark:text-surface-0 font-medium text-xl">
-                                <span>Highlights</span>
+                                <span>Objetivos</span>
                             </a>
                         </li>
                     </ul>
@@ -67,212 +90,117 @@ function smoothScroll(id) {
             <div
                 id="hero"
                 class="flex flex-col pt-6 px-6 lg:px-20 overflow-hidden"
-                style="background: linear-gradient(0deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)), radial-gradient(77.36% 256.97% at 77.36% 57.52%, rgb(238, 239, 175) 0%, rgb(195, 227, 250) 100%); clip-path: ellipse(150% 87% at 93% 13%)"
+                style="background: linear-gradient(0deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)), radial-gradient(77.36% 256.97% at 77.36% 57.52%, rgb(236 253 245) 0%, rgb(16 185 129) 100%); clip-path: ellipse(150% 87% at 93% 13%)"
             >
                 <div class="mx-6 md:mx-20 mt-0 md:mt-6">
-                    <h1 class="text-6xl font-bold text-gray-900 leading-tight"><span class="font-light block">Eu sem integer</span>eget magna fermentum</h1>
-                    <p class="font-normal text-2xl leading-normal md:mt-4 text-gray-700">Sed blandit libero volutpat sed cras. Fames ac turpis egestas integer. Placerat in egestas erat...</p>
-                    <Button label="Get Started" as="router-link" to="/" rounded class="!text-xl mt-8 !px-4"></Button>
+                    <h1 class="text-6xl font-bold text-gray-900 leading-tight"><span class="font-light block">OTB Campiña II</span>Barrio Magisterio</h1>
+                    <p class="font-normal text-2xl leading-normal md:mt-4 text-gray-700">Ubicacion, Zona Norte de Quillacollo - Distrito 5</p>
                 </div>
-                <div class="flex justify-center md:justify-end">
-                    <img src="/demo/images/landing/screen-1.png" alt="Hero Image" class="w-9/12 md:w-auto" />
-                </div>
-            </div>
-
-            <div id="features" class="py-6 px-6 lg:px-20 mt-8 mx-0 lg:mx-20">
-                <div class="grid grid-cols-12 gap-4 justify-center">
-                    <div class="col-span-12 text-center mt-20 mb-6">
-                        <div class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-4xl">Marvelous Features</div>
-                        <span class="text-muted-color text-2xl">Placerat in egestas erat...</span>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-12 lg:col-span-4 p-0 lg:pr-8 lg:pb-8 mt-6 lg:mt-0">
-                        <div
-                            style="height: 160px; padding: 2px; border-radius: 10px; background: linear-gradient(90deg, rgba(253, 228, 165, 0.2), rgba(187, 199, 205, 0.2)), linear-gradient(180deg, rgba(253, 228, 165, 0.2), rgba(187, 199, 205, 0.2))"
-                        >
-                            <div class="p-4 bg-surface-0 dark:bg-surface-900 h-full" style="border-radius: 8px">
-                                <div class="flex items-center justify-center bg-yellow-200 mb-4" style="width: 3.5rem; height: 3.5rem; border-radius: 10px">
-                                    <i class="pi pi-fw pi-users !text-2xl text-yellow-700"></i>
-                                </div>
-                                <h5 class="mb-2 text-surface-900 dark:text-surface-0">Easy to Use</h5>
-                                <span class="text-surface-600 dark:text-surface-200">Posuere morbi leo urna molestie.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-12 lg:col-span-4 p-0 lg:pr-8 lg:pb-8 mt-6 lg:mt-0">
-                        <div
-                            style="height: 160px; padding: 2px; border-radius: 10px; background: linear-gradient(90deg, rgba(145, 226, 237, 0.2), rgba(251, 199, 145, 0.2)), linear-gradient(180deg, rgba(253, 228, 165, 0.2), rgba(172, 180, 223, 0.2))"
-                        >
-                            <div class="p-4 bg-surface-0 dark:bg-surface-900 h-full" style="border-radius: 8px">
-                                <div class="flex items-center justify-center bg-cyan-200 mb-4" style="width: 3.5rem; height: 3.5rem; border-radius: 10px">
-                                    <i class="pi pi-fw pi-palette !text-2xl text-cyan-700"></i>
-                                </div>
-                                <h5 class="mb-2 text-surface-900 dark:text-surface-0">Fresh Design</h5>
-                                <span class="text-surface-600 dark:text-surface-200">Semper risus in hendrerit.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-12 lg:col-span-4 p-0 lg:pb-8 mt-6 lg:mt-0">
-                        <div
-                            style="height: 160px; padding: 2px; border-radius: 10px; background: linear-gradient(90deg, rgba(145, 226, 237, 0.2), rgba(172, 180, 223, 0.2)), linear-gradient(180deg, rgba(172, 180, 223, 0.2), rgba(246, 158, 188, 0.2))"
-                        >
-                            <div class="p-4 bg-surface-0 dark:bg-surface-900 h-full" style="border-radius: 8px">
-                                <div class="flex items-center justify-center bg-indigo-200" style="width: 3.5rem; height: 3.5rem; border-radius: 10px">
-                                    <i class="pi pi-fw pi-map !text-2xl text-indigo-700"></i>
-                                </div>
-                                <div class="mt-6 mb-1 text-surface-900 dark:text-surface-0 text-xl font-semibold">Well Documented</div>
-                                <span class="text-surface-600 dark:text-surface-200">Non arcu risus quis varius quam quisque.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-12 lg:col-span-4 p-0 lg:pr-8 lg:pb-8 mt-6 lg:mt-0">
-                        <div
-                            style="height: 160px; padding: 2px; border-radius: 10px; background: linear-gradient(90deg, rgba(187, 199, 205, 0.2), rgba(251, 199, 145, 0.2)), linear-gradient(180deg, rgba(253, 228, 165, 0.2), rgba(145, 210, 204, 0.2))"
-                        >
-                            <div class="p-4 bg-surface-0 dark:bg-surface-900 h-full" style="border-radius: 8px">
-                                <div class="flex items-center justify-center bg-slate-200 mb-4" style="width: 3.5rem; height: 3.5rem; border-radius: 10px">
-                                    <i class="pi pi-fw pi-id-card !text-2xl text-slate-700"></i>
-                                </div>
-                                <div class="mt-6 mb-1 text-surface-900 dark:text-surface-0 text-xl font-semibold">Responsive Layout</div>
-                                <span class="text-surface-600 dark:text-surface-200">Nulla malesuada pellentesque elit.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-12 lg:col-span-4 p-0 lg:pr-8 lg:pb-8 mt-6 lg:mt-0">
-                        <div
-                            style="height: 160px; padding: 2px; border-radius: 10px; background: linear-gradient(90deg, rgba(187, 199, 205, 0.2), rgba(246, 158, 188, 0.2)), linear-gradient(180deg, rgba(145, 226, 237, 0.2), rgba(160, 210, 250, 0.2))"
-                        >
-                            <div class="p-4 bg-surface-0 dark:bg-surface-900 h-full" style="border-radius: 8px">
-                                <div class="flex items-center justify-center bg-orange-200 mb-4" style="width: 3.5rem; height: 3.5rem; border-radius: 10px">
-                                    <i class="pi pi-fw pi-star !text-2xl text-orange-700"></i>
-                                </div>
-                                <div class="mt-6 mb-1 text-surface-900 dark:text-surface-0 text-xl font-semibold">Clean Code</div>
-                                <span class="text-surface-600 dark:text-surface-200">Condimentum lacinia quis vel eros.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-12 lg:col-span-4 p-0 lg:pb-8 mt-6 lg:mt-0">
-                        <div
-                            style="height: 160px; padding: 2px; border-radius: 10px; background: linear-gradient(90deg, rgba(251, 199, 145, 0.2), rgba(246, 158, 188, 0.2)), linear-gradient(180deg, rgba(172, 180, 223, 0.2), rgba(212, 162, 221, 0.2))"
-                        >
-                            <div class="p-4 bg-surface-0 dark:bg-surface-900 h-full" style="border-radius: 8px">
-                                <div class="flex items-center justify-center bg-pink-200 mb-4" style="width: 3.5rem; height: 3.5rem; border-radius: 10px">
-                                    <i class="pi pi-fw pi-moon !text-2xl text-pink-700"></i>
-                                </div>
-                                <div class="mt-6 mb-1 text-surface-900 dark:text-surface-0 text-xl font-semibold">Dark Mode</div>
-                                <span class="text-surface-600 dark:text-surface-200">Convallis tellus id interdum velit laoreet.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-12 lg:col-span-4 p-0 lg:pr-8 mt-6 lg:mt-0">
-                        <div
-                            style="height: 160px; padding: 2px; border-radius: 10px; background: linear-gradient(90deg, rgba(145, 210, 204, 0.2), rgba(160, 210, 250, 0.2)), linear-gradient(180deg, rgba(187, 199, 205, 0.2), rgba(145, 210, 204, 0.2))"
-                        >
-                            <div class="p-4 bg-surface-0 dark:bg-surface-900 h-full" style="border-radius: 8px">
-                                <div class="flex items-center justify-center bg-teal-200 mb-4" style="width: 3.5rem; height: 3.5rem; border-radius: 10px">
-                                    <i class="pi pi-fw pi-shopping-cart !text-2xl text-teal-700"></i>
-                                </div>
-                                <div class="mt-6 mb-1 text-surface-900 dark:text-surface-0 text-xl font-semibold">Ready to Use</div>
-                                <span class="text-surface-600 dark:text-surface-200">Mauris sit amet massa vitae.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-12 lg:col-span-4 p-0 lg:pr-8 mt-6 lg:mt-0">
-                        <div
-                            style="height: 160px; padding: 2px; border-radius: 10px; background: linear-gradient(90deg, rgba(145, 210, 204, 0.2), rgba(212, 162, 221, 0.2)), linear-gradient(180deg, rgba(251, 199, 145, 0.2), rgba(160, 210, 250, 0.2))"
-                        >
-                            <div class="p-4 bg-surface-0 dark:bg-surface-900 h-full" style="border-radius: 8px">
-                                <div class="flex items-center justify-center bg-blue-200 mb-4" style="width: 3.5rem; height: 3.5rem; border-radius: 10px">
-                                    <i class="pi pi-fw pi-globe !text-2xl text-blue-700"></i>
-                                </div>
-                                <div class="mt-6 mb-1 text-surface-900 dark:text-surface-0 text-xl font-semibold">Modern Practices</div>
-                                <span class="text-surface-600 dark:text-surface-200">Elementum nibh tellus molestie nunc non.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-12 lg:col-span-4 p-0 lg-4 mt-6 lg:mt-0">
-                        <div
-                            style="height: 160px; padding: 2px; border-radius: 10px; background: linear-gradient(90deg, rgba(160, 210, 250, 0.2), rgba(212, 162, 221, 0.2)), linear-gradient(180deg, rgba(246, 158, 188, 0.2), rgba(212, 162, 221, 0.2))"
-                        >
-                            <div class="p-4 bg-surface-0 dark:bg-surface-900 h-full" style="border-radius: 8px">
-                                <div class="flex items-center justify-center bg-purple-200 mb-4" style="width: 3.5rem; height: 3.5rem; border-radius: 10px">
-                                    <i class="pi pi-fw pi-eye !text-2xl text-purple-700"></i>
-                                </div>
-                                <div class="mt-6 mb-1 text-surface-900 dark:text-surface-0 text-xl font-semibold">Privacy</div>
-                                <span class="text-surface-600 dark:text-surface-200">Neque egestas congue quisque.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        class="col-span-12 mt-20 mb-20 p-2 md:p-20"
-                        style="border-radius: 20px; background: linear-gradient(0deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)), radial-gradient(77.36% 256.97% at 77.36% 57.52%, #efe1af 0%, #c3dcfa 100%)"
-                    >
-                        <div class="flex flex-col justify-center items-center text-center px-4 py-4 md:py-0">
-                            <div class="text-gray-900 mb-2 text-3xl font-semibold">Joséphine Miller</div>
-                            <span class="text-gray-600 text-2xl">Peak Interactive</span>
-                            <p class="text-gray-900 sm:line-height-2 md:line-height-4 text-2xl mt-6" style="max-width: 800px">
-                                “Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.”
-                            </p>
-                            <img src="/demo/images/landing/peak-logo.svg" class="mt-6" alt="Company logo" />
-                        </div>
-                    </div>
+                <div class="flex justify-center md:justify-end w-full">
+                    <img src="/ImagenesOTB/entradaOTB.png" alt="Imagen-entrada-OTB" class="md:w-auto rounded" />
                 </div>
             </div>
 
             <div id="highlights" class="py-6 px-6 lg:px-20 mx-0 my-12 lg:mx-20">
                 <div class="text-center">
-                    <div class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-4xl">Powerful Everywhere</div>
-                    <span class="text-muted-color text-2xl">Amet consectetur adipiscing elit...</span>
+                    <div class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-4xl">Objetivos de la OTB</div>
+                    <div class="mt-5">
+                        <span class="text-muted-color text-2xl">Gestionar ante las Autoridades Municipales y/o de Gobierno obras con referencia a los servicios basicos (agua potable y alcantarillado).</span>
+                    </div>
+                    <div class="mt-2">
+                        <span class="text-muted-color text-2xl">Getionar ante las autoridades municipales y/o de Gobierno obras para equipamiento de la urbanizacion.</span>
+                    </div>
+                    <div class="mt-2">
+                        <span class="text-muted-color text-2xl">Ejercer control y vigilancia de que se cumpla con las reuniones ordinarias y extraordinarias acordadas, trabajo comunitarios acordados, eventos sociales, ect.</span>
+                    </div>
+                    <div class="m-2">
+                        <span class="text-muted-color text-2xl">Informar y rendir cuentas segun lo reglamentado.</span>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-12 gap-4 mt-20 pb-2 md:pb-20">
-                    <div class="flex justify-center col-span-12 lg:col-span-6 bg-purple-100 p-0 order-1 lg:order-none" style="border-radius: 8px">
-                        <img src="/demo/images/landing/mockup.svg" class="w-11/12" alt="mockup mobile" />
+                    <div class="col-span-12 lg:col-span-6 my-auto flex flex-col lg:items-end text-center lg:text-right gap-4 ml-5">
+                        <div class="border px-10 py-5 bg-slate-200 rounded">
+                            <Galleria :value="images" :responsiveOptions="galleriaResponsiveOptions" :numVisible="5" containerStyle="max-width: 560px">
+                                <template #item="slotProps">
+                                    <img :src="slotProps.item.itemImageSrc" :alt="slotProps.item.alt" style="width: 100%" />
+                                </template>
+                                <template #thumbnail="slotProps">
+                                    <img :src="slotProps.item.thumbnailImageSrc" :alt="slotProps.item.alt" />
+                                </template>
+                            </Galleria>
+                        </div>
                     </div>
 
-                    <div class="col-span-12 lg:col-span-6 my-auto flex flex-col lg:items-end text-center lg:text-right gap-4">
-                        <div class="flex items-center justify-center bg-purple-200 self-center lg:self-end" style="width: 4.2rem; height: 4.2rem; border-radius: 10px">
-                            <i class="pi pi-fw pi-mobile !text-4xl text-purple-700"></i>
+                    <div class="col-span-12 lg:col-span-6 my-auto flex flex-col lg:items-end text-center lg:text-right gap-4 border py-3 px-1 rounded">
+                        <div class="flex items-center justify-center bg-teal-100 self-center lg:self-end" style="width: 4.2rem; height: 4.2rem; border-radius: 10px">
+                            <i class="pi pi-fw pi-building !text-4xl bg-teal-100"></i>
                         </div>
-                        <div class="leading-none text-surface-900 dark:text-surface-0 text-3xl font-normal">Congue Quisque Egestas</div>
-                        <span class="text-surface-700 dark:text-surface-100 text-2xl leading-normal ml-0 md:ml-2" style="max-width: 650px"
-                            >Lectus arcu bibendum at varius vel pharetra vel turpis nunc. Eget aliquet nibh praesent tristique magna sit amet purus gravida. Sit amet mattis vulputate enim nulla aliquet.</span
+                        <div class="leading-none text-surface-900 dark:text-surface-0 text-3xl font-normal">Disposiciones Generales</div>
+                        <span class="text-surface-700 dark:text-surface-100 text-2xl leading-normal ml-0 md:ml-2 rounded p-2" style="max-width: 650px"
+                            >La urbanizacion Campiña II "Barrio Magisterio", en apego a la Ley 1551 de participacion popular se organiza para consolidar la organizacion territorial de bases, donde se reconoce a un vecino de la urbanizacion, a todo
+                            ciudadano Boliviano mayor de edad y habil por derecho y/o titular de familia, propietario de la vivienda asentada en la jurisdiccion de la organizacion mencionada, donde se asignara derechos y obligaciones en la respectiva
+                            reglamentacion.</span
                         >
                     </div>
                 </div>
 
-                <div class="grid grid-cols-12 gap-4 my-20 pt-2 md:pt-20">
-                    <div class="col-span-12 lg:col-span-6 my-auto flex flex-col text-center lg:text-left lg:items-start gap-4">
-                        <div class="flex items-center justify-center bg-yellow-200 self-center lg:self-start" style="width: 4.2rem; height: 4.2rem; border-radius: 10px">
-                            <i class="pi pi-fw pi-desktop !text-3xl text-yellow-700"></i>
+                <div class="grid grid-cols-12 gap-4 mt-20 pb-2 md:pb-20">
+                    <div class="col-span-12 lg:col-span-6 my-auto flex flex-col lg:items-end text-center lg:text-right gap-4 border py-3 px-1 rounded">
+                        <div class="flex items-center justify-center bg-teal-100 self-center lg:self-end" style="width: 4.2rem; height: 4.2rem; border-radius: 10px">
+                            <i class="pi pi-fw pi-building !text-4xl bg-teal-100"></i>
                         </div>
-                        <div class="leading-none text-surface-900 dark:text-surface-0 text-3xl font-normal">Celerisque Eu Ultrices</div>
-                        <span class="text-surface-700 dark:text-surface-100 text-2xl leading-normal mr-0 md:mr-2" style="max-width: 650px"
-                            >Adipiscing commodo elit at imperdiet dui. Viverra nibh cras pulvinar mattis nunc sed blandit libero. Suspendisse in est ante in. Mauris pharetra et ultrices neque ornare aenean euismod elementum nisi.</span
+                        <div class="leading-none text-surface-900 dark:text-surface-0 text-3xl font-normal">Derechos y Obligaciones</div>
+                        <span class="text-surface-700 dark:text-surface-100 text-2xl leading-normal ml-0 md:ml-2 rounded p-2" style="max-width: 650px"
+                            >Podran intervenir en forma directa y personal en las deliberaciones de las reuniones ordinarias y extraordinarias con participacion de voz y voto
+                            <br><br>
+                            Tendran derecho a ser categorizados de acuerdo a los años de antiguedad y de los servicios prestados a la O.T.B.
+                            <br><br>
+                            Los miembros tienen derecho a un trabajo comunitario, para el beneficio del barrio y la urbanizacion
+                            <br><br>
+                            Tendran derecho a ser informados de las actividades realizadas por la O.T.B. y a rendir cuentas de la gestion realizada
+                            </span
                         >
                     </div>
-
-                    <div class="flex justify-end order-1 sm:order-2 col-span-12 lg:col-span-6 bg-yellow-100 p-0" style="border-radius: 8px">
-                        <img src="/demo/images/landing/mockup-desktop.svg" class="w-11/12" alt="mockup" />
+                    <div class="col-span-12 lg:col-span-6 my-auto flex flex-col lg:items-end text-center lg:text-right gap-4 ml-3">
+                        <div class="col-span-12 md:col-span-6">
+                            <h4 class="font-medium text-2xl leading-normal mb-4 text-surface-900 dark:text-surface-0">Ubicacion</h4>
+                            <iframe
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11542.41151788628!2d-66.26690689865602!3d-17.384127687966007!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93e30bdb9dd0d05b%3A0x8921134cbe6c46cd!2sCentro%20deportivo%20OTB%20La%20Campi%C3%B1a%202!5e0!3m2!1ses!2sbo!4v1728056063215!5m2!1ses!2sbo"
+                                width="600"
+                                height="450"
+                                style="border: 0"
+                                allowfullscreen=""
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                            ></iframe>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div id="pricing" class="py-6 px-6 lg:px-20 my-2 md:my-6">
                 <div class="text-center mb-6">
-                    <div class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-4xl">Matchless Pricing</div>
-                    <span class="text-muted-color text-2xl">Amet consectetur adipiscing elit...</span>
+                    <div class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-4xl">Normas y procedimientos de la Junta Directiva.</div>
                 </div>
-
+                <div class="text-center mb-6">
+                    <span class="text-muted-color text-2xl">La Junta Directiva de la O.T.B. es la maxima autoridad de nuestra organizacion, como organismo de control y resolucion, encargada de: </span>
+                </div>
+                <div class="text-center mb-6">
+                    <span class="text-muted-color text-2xl">Aprobar los informes de actividad, reuniones y funciones de la organizacion, responsable del manejo economico.</span>
+                </div>
+                <div class="text-center mb-6">
+                    <span class="text-muted-color text-2xl">Representar a la O.T.B. de manera oficial ante organismos gubernamentales</span>
+                </div>
+                <div class="text-center mb-6">
+                    <span class="text-muted-color text-2xl">Supervisar el cumplimiento de actividades programadas.</span>
+                </div>
+                <div class="text-center mb-6">
+                    <span class="text-muted-color text-2xl">Hacer el cumplimiento de presente reglamento y las resoluciones emanadas de las reuniones ordinarias de la O.T.B.</span>
+                </div>
+                <div class="text-center mb-6">
+                    <span class="text-muted-color text-2xl">Proponer politicas de acciones a seguir </span>
+                </div>
             </div>
 
             <div class="py-6 px-6 mx-0 mt-20 lg:mx-20">
@@ -302,35 +230,12 @@ function smoothScroll(id) {
 
                     <div class="col-span-12 md:col-span-10">
                         <div class="grid grid-cols-12 gap-8 text-center md:text-left">
-                            <div class="col-span-12 md:col-span-3">
-                                <h4 class="font-medium text-2xl leading-normal mb-4 text-surface-900 dark:text-surface-0">Company</h4>
-                                <a class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">About Us</a>
-                                <a class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">News</a>
-                                <a class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">Investor Relations</a>
-                                <a class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">Careers</a>
-                                <a class="leading-normal text-xl block cursor-pointer text-surface-700 dark:text-surface-100">Media Kit</a>
-                            </div>
-
-                            <div class="col-span-12 md:col-span-3">
-                                <h4 class="font-medium text-2xl leading-normal mb-4 text-surface-900 dark:text-surface-0">Resources</h4>
-                                <a class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">Get Started</a>
-                                <a class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">Learn</a>
-                                <a class="leading-normal text-xl block cursor-pointer text-surface-700 dark:text-surface-100">Case Studies</a>
-                            </div>
-
-                            <div class="col-span-12 md:col-span-3">
-                                <h4 class="font-medium text-2xl leading-normal mb-4 text-surface-900 dark:text-surface-0">Community</h4>
-                                <a class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">Discord</a>
-                                <a class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">Events<img src="/demo/images/landing/new-badge.svg" class="ml-2" /></a>
-                                <a class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">FAQ</a>
-                                <a class="leading-normal text-xl block cursor-pointer text-surface-700 dark:text-surface-100">Blog</a>
-                            </div>
-
-                            <div class="col-span-12 md:col-span-3">
-                                <h4 class="font-medium text-2xl leading-normal mb-4 text-surface-900 dark:text-surface-0">Legal</h4>
-                                <a class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">Brand Policy</a>
-                                <a class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">Privacy Policy</a>
-                                <a class="leading-normal text-xl block cursor-pointer text-surface-700 dark:text-surface-100">Terms of Service</a>
+                            <div class="col-span-12 md:col-span-6">
+                                <h4 class="font-medium text-2xl leading-normal mb-4 text-surface-900 dark:text-surface-0">Datos</h4>
+                                <h2 class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100">
+                                    No somos simplemente un espacio de desarrollo urbano, somos una comunidad organizada y acogedora, donde las familias no solo residen, sino que prosperan formando legados. Encuentra el hogar que siempre ha anhelado
+                                    co nuestras impresionante comunidad residencial
+                                </h2>
                             </div>
                         </div>
                     </div>
