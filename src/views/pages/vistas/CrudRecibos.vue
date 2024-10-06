@@ -1,7 +1,7 @@
 <script setup>
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import { onBeforeMount, onMounted, ref, watch,computed } from 'vue';
+import { onBeforeMount, onMounted, ref, watch, computed } from 'vue';
 import { fetchListaRecibos, fetchListaSocios, fetchListaPropiedades, fetchBusquedaPropiedadSocio } from '@/service/peticionesApi';
 import { fetchRegistrarNuevoRecibo } from '@/service/PeticionesApiPost';
 import { fetchActualizarRecibo } from '@/service/PeticionesApiPut';
@@ -15,7 +15,7 @@ const calendarValue = ref(null);
 const reciboDialog = ref(false);
 const reciboUpdate = ref(false);
 const switchValor = ref(false);
-
+const detallesRecibo = ref(false);
 const deleteProductDialog = ref(false);
 const deleteProductsDialog = ref(false);
 const recibo = ref({
@@ -37,9 +37,9 @@ const propiedadSocio = ref({
     nombre_socio: ''
 });
 const busquedaRealizada = ref(false);
-let socioOriginal =  null;
+const detalleRecibo = ref({});
+let socioOriginal = null;
 let cambio = false;
-
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
@@ -111,9 +111,19 @@ function cerrarActualizacion() {
     reciboUpdate.value = false;
 }
 
+// Funcion para modal con todos los datos del recibo, incluye multas
+function abrir(data) {
+    detallesRecibo.value = true;
+    detalleRecibo.value = { ...data };
+    console.log(detalleRecibo.value);
+}
 
+function close() {
+    detallesRecibo.value = false;
+    detalleRecibo.value = null;
+}
 
-watch(socio, (newSocio,oldSocio) => {
+watch(socio, (newSocio, oldSocio) => {
     if (newSocio) {
         codigoPropiedad(newSocio.code);
     }
@@ -144,7 +154,7 @@ onBeforeMount(loadRecibos);
 async function guardarRecibo() {
     try {
         submitted.value = true;
-        if(!busquedaRealizada.value && !switchValor.value){
+        if (!busquedaRealizada.value && !switchValor.value) {
             recibo.value.id_socio = socio.value.code;
             recibo.value.codigo_propiedad = recibo.value.codigo_propiedad.codigo_propiedad;
         }
@@ -152,7 +162,7 @@ async function guardarRecibo() {
         if (response.status === 200) {
             toast.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo guardado correctamente.', life: 5000 });
             hideDialog();
-            if (busquedaRealizada){
+            if (busquedaRealizada) {
                 busquedaRealizada.value = false;
             }
             await loadRecibos();
@@ -211,13 +221,13 @@ async function busquedaPropiedadSocio() {
 }
 
 //funcion PUT para actualizar recibo
-async function actualizaRecibo(){
+async function actualizaRecibo() {
     try {
         cambio = false;
-        let fechaFormateada = recibo.value.mes_correspondiente.toISOString().slice(0,10);
+        let fechaFormateada = recibo.value.mes_correspondiente.toISOString().slice(0, 10);
         recibo.value.mes_correspondiente = fechaFormateada;
         console.log(recibo.value);
-        const response = await fetchActualizarRecibo(recibo.value.id,recibo.value);
+        const response = await fetchActualizarRecibo(recibo.value.id, recibo.value);
         console.log(response);
         if (response.status === 200) {
             toast.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo actualizado correctamente.', life: 5000 });
@@ -271,10 +281,9 @@ async function actualizaRecibo(){
 
                 <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
                 <Column field="id" header="#Aviso" sortable style="min-width: 6rem"></Column>
-                <Column field="codigo_propiedad" header="Codigo de Propiedad" sortable style="min-width: 10rem"></Column>
+                <Column field="codigo_propiedad" header="# Propiedad" sortable style="min-width: 10rem"></Column>
                 <Column field="fecha_lectura" header="Fecha de lectura" sortable style="min-width: 10rem"></Column>
                 <Column field="nombre_completo" header="Dueño" sortable style="min-width: 16rem"></Column>
-                <Column field="observaciones" header="Observaciones" style="min-width: 10rem"></Column>
                 <Column field="lectura_anterior" header="Lectura Anterior" style="min-width: 8rem"></Column>
                 <Column field="lectura_actual" header="Lectura Actual" style="min-width: 8rem"></Column>
                 <Column field="total" header="Total" style="min-width: 6rem"></Column>
@@ -283,12 +292,129 @@ async function actualizaRecibo(){
                         <Tag :value="slotProps.data.estado_pago == 1 ? 'Pagado' : 'Endeudado'" :severity="getEstadoLabel(slotProps.data.estado_pago)" />
                     </template>
                 </Column>
-                <Column :exportable="false" style="min-width: 8rem">
+                <Column :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
-                        <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editarRecibo(slotProps.data)" />
+                        <Button icon="pi pi-eye" outlined severity="info" rounded @click="abrir(slotProps.data)" />
+                        <Button icon="pi pi-pencil" outlined rounded class="mx-1" @click="editarRecibo(slotProps.data)" />
                         <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteProduct(slotProps.data)" />
                     </template>
                 </Column>
+                <Dialog v-model:visible="detallesRecibo" :breakpoints="{ '960px': '75vw' }" :style="{ width: '50vw' }" :modal="true">
+                    <template #header>
+                        <div class="text-xl font-bold text-emerald-400">Detalles del Pre-Aviso</div>
+                    </template>
+                    <div class="border-2 border-emerald-500  rounded py-3">
+                        <div class="flex">
+                            <div class="font-bold bg-auto rounded w-2/3 px-1 text-emerald-300">
+                                <div class="pl-5 text-lg mb-4">Sistema de agua potable AQUACUBE</div>
+                                <div class="text-center text-xl">"OTB Campiña II" - Quillacollo - Cochabamba - Bolivia</div>
+                            </div>
+                            <div class="text-xl pl-20 pt-5 font-bold">
+                                <h3> N° {{detalleRecibo.id}}</h3>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <Splitter style="height: 300px; border: 2px solid #059669">
+                                <SplitterPanel :size="80">
+                                    <Splitter layout="vertical">
+                                        <SplitterPanel class="flex items-center justify-center p-1" :size="55">
+                                            <Splitter>
+                                                <SplitterPanel class="flex items-center justify-center text-lg font-semibold" :size="60"> Socio: {{ detalleRecibo.nombre_completo }} </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center text-center" :size="30"> Fecha de lectura: {{ detalleRecibo.fecha_lectura }} </SplitterPanel>
+                                            </Splitter>
+                                        </SplitterPanel>
+                                        <SplitterPanel :size="70">
+                                            <Splitter>
+                                                <SplitterPanel class="flex flex-col items-center justify-center" :size="25">
+                                                    <div class="text-center">
+                                                        <div class="">Lectura Anterior :</div>
+                                                        <hr />
+                                                        <div>
+                                                            {{ detalleRecibo.lectura_anterior }}
+                                                        </div>
+                                                    </div>
+                                                </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center" :size="25">
+                                                    <div class="text-center">
+                                                        <div class="">Lectura Actual :</div>
+                                                        <hr />
+                                                        <div>
+                                                            {{ detalleRecibo.lectura_actual }}
+                                                        </div>
+                                                    </div>
+                                                </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center" :size="25">
+                                                    <div class="text-center">
+                                                        <div class="">Metros Cubicos :</div>
+                                                        <hr />
+                                                        <div>
+                                                            {{ detalleRecibo.lectura_actual - detalleRecibo.lectura_anterior }}
+                                                        </div>
+                                                    </div>
+                                                </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center" :size="18">
+                                                    <div class="text-center">
+                                                        <div class="">Subtotal :</div>
+                                                        <hr />
+                                                        <div>
+                                                            {{ detalleRecibo.total }}
+                                                        </div>
+                                                    </div>
+                                                </SplitterPanel>
+                                            </Splitter>
+                                        </SplitterPanel>
+                                        <SplitterPanel :size="70">
+                                            <Splitter>
+                                                <SplitterPanel class="flex items-center justify-center p-3" :size="23"> Multas por vencimiento : </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center" :size="50"> Panel 4 </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center p-3" :size="16"> <div></div> </SplitterPanel>
+                                            </Splitter>
+                                        </SplitterPanel>
+                                        <SplitterPanel :size="70">
+                                            <Splitter>
+                                                <SplitterPanel class="flex items-center justify-center p-3" :size="23"> Otras multas : </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center" :size="50"> Panel 4 </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center p-3" :size="16"><div></div></SplitterPanel>
+                                            </Splitter>
+                                        </SplitterPanel>
+                                        <SplitterPanel :size="70">
+                                            <Splitter>
+                                                <SplitterPanel class="flex items-center justify-center" :size="82">
+                                                    Cancelar: Nro. de Cuenta: 3051-969273 <br />
+                                                    Banco La Promotora EFV</SplitterPanel
+                                                >
+                                                <SplitterPanel class="flex items-center justify-center" :size="20"> Panel 4 </SplitterPanel>
+                                            </Splitter>
+                                        </SplitterPanel>
+                                        <SplitterPanel :size="70">
+                                            <Splitter>
+                                                <SplitterPanel class="flex items-center justify-center" :size="20"> Observaciones: </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center" :size="65"> {{ detalleRecibo.observaciones }} </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center" :size="21">
+                                                    <div class="text-center">
+                                                        <div>Total:</div>
+                                                        <hr />
+                                                        <div>
+                                                            {{ detalleRecibo.total }}
+                                                        </div>
+                                                    </div>
+                                                </SplitterPanel>
+                                            </Splitter>
+                                        </SplitterPanel>
+                                    </Splitter>
+                                </SplitterPanel>
+                            </Splitter>
+                        </div>
+                    </div>
+
+                    <template #footer>
+                        <div class="flex">
+                            <Button class="mx-2" label="Cerrar" @click="close" severity="secondary" outlined />
+                            <Button icon="pi pi-print" label="Descargar" @click="close" severity="info" outlined />
+                        </div>
+                    </template>
+                </Dialog>
             </DataTable>
         </div>
 
@@ -333,17 +459,31 @@ async function actualizaRecibo(){
                         <small v-if="submitted && !id_medidor" class="text-red-500">El campo es requerido.</small>
                     </div>
                     <div class="mt-8">
-                        <Button label="Buscar" icon="pi pi-search" @click="busquedaPropiedadSocio(id_medidor)"/>
+                        <Button label="Buscar" icon="pi pi-search" @click="busquedaPropiedadSocio(id_medidor)" />
                     </div>
                 </div>
                 <div class="col-span-6">
                     <label for="lectura_actual" class="block font-bold mb-2">Lectura actual: </label>
-                    <InputNumber :disabled="!busquedaRealizada" id="lectura_actual" v-model.trim="recibo.lectura_actual" :placeholder="!busquedaRealizada ? 'Necesita hacer la busqueda por medidor para acceder a este campo.' : 'Ingrese este campo.'" fluid />
+                    <InputNumber
+                        :disabled="!busquedaRealizada"
+                        id="lectura_actual"
+                        v-model.trim="recibo.lectura_actual"
+                        :placeholder="!busquedaRealizada ? 'Necesita hacer la busqueda por medidor para acceder a este campo.' : 'Ingrese este campo.'"
+                        fluid
+                    />
                     <small v-if="submitted && !recibo.lectura_actual" class="text-red-500">El campo es requerido.</small>
                 </div>
                 <div>
                     <label for="observaciones" class="block font-bold mb-3">Observaciones: </label>
-                    <Textarea :disabled="!busquedaRealizada" id="observaciones" v-model.trim="recibo.observaciones" rows="2" cols="20" :placeholder="!busquedaRealizada ? 'Necesita hacer la busqueda por medidor para acceder a este campo.' : 'Ingrese este campo.'" fluid />
+                    <Textarea
+                        :disabled="!busquedaRealizada"
+                        id="observaciones"
+                        v-model.trim="recibo.observaciones"
+                        rows="2"
+                        cols="20"
+                        :placeholder="!busquedaRealizada ? 'Necesita hacer la busqueda por medidor para acceder a este campo.' : 'Ingrese este campo.'"
+                        fluid
+                    />
                 </div>
             </div>
 
@@ -367,7 +507,7 @@ async function actualizaRecibo(){
                 </div>
                 <div>
                     <label for="observaciones" class="block font-bold mb-3">Observaciones: </label>
-                    <Textarea  id="observaciones" v-model.trim="recibo.observaciones" rows="3" cols="20" fluid />
+                    <Textarea id="observaciones" v-model.trim="recibo.observaciones" rows="3" cols="20" fluid />
                 </div>
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-6">
@@ -379,9 +519,8 @@ async function actualizaRecibo(){
                         <label for="codigo_propiedad" class="block font-bold mb-3">Codigo de propiedad: </label>
                         <Message severity="secondary" v-if="!socioHaCambiado.value">Codigo Seleccionado: {{ recibo.codigo_propiedad }}</Message>
                         <div v-else>
-                            <Select v-model="recibo.codigo_propiedad"  :options="propiedadesValues" optionLabel="codigo_propiedad" placeholder="Select" />
+                            <Select v-model="recibo.codigo_propiedad" :options="propiedadesValues" optionLabel="codigo_propiedad" placeholder="Select" />
                         </div>
-
                     </div>
                     <br />
                     <small v-if="submitted && !recibo.codigo_propiedad" class="text-red-500">El campo es requerido.</small>

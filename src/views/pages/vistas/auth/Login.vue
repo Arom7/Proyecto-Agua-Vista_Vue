@@ -1,10 +1,9 @@
 <script setup>
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
 import { ref } from 'vue';
+import { useToast } from 'primevue/usetoast';
 import { useRouter } from 'vue-router';
 import { fetchAccesoSocios } from '@/service/PeticionesApiPost';
-import { useToast } from 'primevue/usetoast';
-
 
 // atributos
 const toast = useToast();
@@ -13,31 +12,39 @@ const contrasenia = ref('');
 const errorMessage = ref('');
 const checked = ref(false);
 const router = useRouter();
-const url = 'http://127.0.0.1:8000/api';
+const display = ref(false);
+
 let data = {
     username: '',
     contrasenia: ''
 };
 
-
 async function enviarSesion() {
-
     data.username = username.value;
     data.contrasenia = contrasenia.value;
-
     try {
         const response = await fetchAccesoSocios(data);
         if (response.status === 200) {
             router.push('/dashboard');
-        }else{
-            toast.add({ severity: 'error', summary: 'Error Message', detail: 'Message Detail', life: 3000 });
-            errorMessage.value = 'Error: ' + (data.message || 'Solicitud fallida');
+        } else {
+            errorMessage.value = 'Usuario o contraseña incorrectos.';
+            display.value = true;
         }
     } catch (error) {
+        toast.add({ severity: 'error', summary: 'Falla al iniciar sesion', detail: 'No se pudo iniciar sesion', life: 5000 });
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar iniciar sesión. Inténtalo de nuevo.';
     }
-};
+}
+
+function open() {
+    display.value = true;
+}
+
+function close() {
+    display.value = false;
+}
+
 </script>
 
 <template>
@@ -57,7 +64,6 @@ async function enviarSesion() {
                             <mask id="mask0_1413_1551" style="mask-type: alpha" maskUnits="userSpaceOnUse" x="0" y="8" width="54" height="11">
                                 <path d="M27 18.3652C10.5114 19.1944 0 8.88892 0 8.88892C0 8.88892 16.5176 14.5866 27 14.5866C37.4824 14.5866 54 8.88892 54 8.88892C54 8.88892 43.4886 17.5361 27 18.3652Z" fill="var(--primary-color)" />
                             </mask>
-
                         </svg>
                         <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Bienvenido AquaCube!</div>
                         <span class="text-muted-color font-medium">Inicie sesion para continuar</span>
@@ -75,7 +81,16 @@ async function enviarSesion() {
                             </div>
                             <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Olvidaste tu contraseña?</span>
                         </div>
-                        <Button @click="enviarSesion" label="Ingresar" class="w-full"></Button>
+                        <Button @click="enviarSesion" icon="pi pi-lock" label="Ingresar" class="w-full"/>
+                        <Dialog header="Cuidado!" v-model:visible="display" :breakpoints="{ '960px': '75vw' }" :style="{ width: '30vw' , border: '1px solid red'}" :modal="true">
+                            <i class="pi pi-exclamation-triangle mr-1" style="font-size: 2rem" />
+                            <span>
+                                Ocurrio un error al iniciar sesion, verifica si tu username o tu contraseña sean las correctas.
+                            </span>
+                            <template #footer>
+                                <Button icon="pi pi-times" label="Cerrar" @click="close" severity="danger" />
+                            </template>
+                        </Dialog>
                     </div>
                 </div>
             </div>

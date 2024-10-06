@@ -152,23 +152,32 @@ const galleriaResponsiveOptions = ref([
                         </div>
                         <div class="leading-none text-surface-900 dark:text-surface-0 text-3xl font-normal">Derechos y Obligaciones</div>
                         <span class="text-surface-700 dark:text-surface-100 text-2xl leading-normal ml-0 md:ml-2 rounded p-2" style="max-width: 650px"
-                            >Podran intervenir en forma directa y personal en las deliberaciones de las reuniones ordinarias y extraordinarias con participacion de voz y voto
-                            <br><br>
+                            >Podran intervenir en forma directa y personal en las deliberaciones de las reuniones ordinarias y extraordinarias con participacion de voz y voto <br /><br />
                             Tendran derecho a ser categorizados de acuerdo a los años de antiguedad y de los servicios prestados a la O.T.B.
-                            <br><br>
+                            <br /><br />
                             Los miembros tienen derecho a un trabajo comunitario, para el beneficio del barrio y la urbanizacion
-                            <br><br>
+                            <br /><br />
                             Tendran derecho a ser informados de las actividades realizadas por la O.T.B. y a rendir cuentas de la gestion realizada
-                            </span
-                        >
+                        </span>
                     </div>
                     <div class="col-span-12 lg:col-span-6 my-auto flex flex-col lg:items-end text-center lg:text-right gap-4 ml-3">
                         <div class="col-span-12 md:col-span-6">
                             <h4 class="font-medium text-2xl leading-normal mb-4 text-surface-900 dark:text-surface-0">Ubicacion</h4>
                             <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11542.41151788628!2d-66.26690689865602!3d-17.384127687966007!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93e30bdb9dd0d05b%3A0x8921134cbe6c46cd!2sCentro%20deportivo%20OTB%20La%20Campi%C3%B1a%202!5e0!3m2!1ses!2sbo!4v1728056063215!5m2!1ses!2sbo"
+                                class="iframe-large"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7615.17041379771!2d-66.25889337985535!3d-17.383681371100927!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93e30bdb9dd0d05b%3A0x8921134cbe6c46cd!2sCentro%20deportivo%20OTB%20La%20Campi%C3%B1a%202!5e0!3m2!1ses!2sbo!4v1728094265726!5m2!1ses!2sbo"
                                 width="600"
                                 height="450"
+                                style="border: 0"
+                                allowfullscreen=""
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                            ></iframe>
+                            <iframe
+                                class="iframe-small"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7615.17041379771!2d-66.25889337985535!3d-17.383681371100927!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93e30bdb9dd0d05b%3A0x8921134cbe6c46cd!2sCentro%20deportivo%20OTB%20La%20Campi%C3%B1a%202!5e0!3m2!1ses!2sbo!4v1728094265726!5m2!1ses!2sbo"
+                                width="400"
+                                height="300"
                                 style="border: 0"
                                 allowfullscreen=""
                                 loading="lazy"
@@ -244,3 +253,24 @@ const galleriaResponsiveOptions = ref([
         </div>
     </div>
 </template>
+
+<style scoped>
+.iframe-large {
+    display: block; /* shown by default */
+}
+
+.iframe-small {
+    display: none; /* hidden by default */
+}
+
+/* When the viewport is 750px or less, switch the iframes */
+@media (max-width: 1500px) {
+    .iframe-large {
+        display: none; /* hide */
+    }
+
+    .iframe-small {
+        display: block; /* show */
+    }
+}
+</style>

@@ -34,9 +34,9 @@ export async function fetchAccesoSocios(data) {
             }
         });
         if (!response.ok) {
-            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText} mensaje: ${problema.message}`);
+            throw new Error('Usuario o contraseña incorrectos');
         }
-        return await response.json();
+        return response.json();
     }catch(error){
         console.error('Se produjo un error:', error.message);
         throw error;

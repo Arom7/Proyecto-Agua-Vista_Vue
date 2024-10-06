@@ -131,7 +131,16 @@ const router = createRouter({
                     path: '/reportes/pagos',
                     name: 'reportePagos',
                     component: () => import('@/views/pages/vistas/ReportePagos.vue')
-                }
+                },{
+                    path: '/BombaDeAgua',
+                    name: 'BombadeAgua',
+                    component: () => import('@/views/pages/Empty.vue')
+                },{
+                    path: '/PozoDeAgua',
+                    name: 'PozoDeAgua',
+                    component: () => import('@/views/pages/Empty.vue')
+                },
+
             ]
         },
         {
