@@ -82,7 +82,7 @@ const galleriaResponsiveOptions = ref([
                         </li>
                     </ul>
                     <div class="flex border-t lg:border-t-0 border-surface py-4 lg:py-0 mt-4 lg:mt-0 gap-2">
-                        <Button label="Inicio de sesion" text as="router-link" to="/auth/login" rounded></Button>
+                        <Button label="Inicio de sesion" text as="router-link" to="/auth/login" rounded />
                     </div>
                 </div>
             </div>
@@ -90,14 +90,15 @@ const galleriaResponsiveOptions = ref([
             <div
                 id="hero"
                 class="flex flex-col pt-6 px-6 lg:px-20 overflow-hidden"
-                style="background: linear-gradient(0deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)), radial-gradient(77.36% 256.97% at 77.36% 57.52%, rgb(236 253 245) 0%, rgb(16 185 129) 100%); clip-path: ellipse(150% 87% at 93% 13%)"
+                style="background: linear-gradient(0deg, rgba(0,225,163, 0.2), rgba(0,195,223, 0.2)), radial-gradient(77.36% 256.97% at 77.36% 57.52%, rgb(0,225,163) 0%, rgb(0,208,225) 100%); clip-path: ellipse(120% 85% at 95% 9%)"
             >
                 <div class="mx-6 md:mx-20 mt-0 md:mt-6">
                     <h1 class="text-6xl font-bold text-gray-900 leading-tight"><span class="font-light block">OTB Campiña II</span>Barrio Magisterio</h1>
                     <p class="font-normal text-2xl leading-normal md:mt-4 text-gray-700">Ubicacion, Zona Norte de Quillacollo - Distrito 5</p>
+                    <p class="font-normal text-2xl leading-normal md:mt-4 text-gray-700">Cochabamba - Bolivia</p>
                 </div>
                 <div class="flex justify-center md:justify-end w-full">
-                    <img src="/ImagenesOTB/entradaOTB.png" alt="Imagen-entrada-OTB" class="md:w-auto rounded" />
+                    <img src="/ImagenesOTB/entradaOTB.png" alt="Imagen-entrada-OTB" class="md:w-auto rounded-lg" />
                 </div>
             </div>
 
@@ -120,7 +121,7 @@ const galleriaResponsiveOptions = ref([
 
                 <div class="grid grid-cols-12 gap-4 mt-20 pb-2 md:pb-20">
                     <div class="col-span-12 lg:col-span-6 my-auto flex flex-col lg:items-end text-center lg:text-right gap-4 ml-5">
-                        <div class="border px-10 py-5 bg-slate-200 rounded">
+                        <div class="border px-10 py-5 bg-slate-200 rounded-md">
                             <Galleria :value="images" :responsiveOptions="galleriaResponsiveOptions" :numVisible="5" containerStyle="max-width: 560px">
                                 <template #item="slotProps">
                                     <img :src="slotProps.item.itemImageSrc" :alt="slotProps.item.alt" style="width: 100%" />
@@ -132,12 +133,12 @@ const galleriaResponsiveOptions = ref([
                         </div>
                     </div>
 
-                    <div class="col-span-12 lg:col-span-6 my-auto flex flex-col lg:items-end text-center lg:text-right gap-4 border py-3 px-1 rounded">
+                    <div class="col-span-12 lg:col-span-6 my-auto flex flex-col lg:items-end text-center lg:text-right gap-4 border py-3 px-5 rounded-lg">
                         <div class="flex items-center justify-center bg-teal-100 self-center lg:self-end" style="width: 4.2rem; height: 4.2rem; border-radius: 10px">
                             <i class="pi pi-fw pi-building !text-4xl bg-teal-100"></i>
                         </div>
                         <div class="leading-none text-surface-900 dark:text-surface-0 text-3xl font-normal">Disposiciones Generales</div>
-                        <span class="text-surface-700 dark:text-surface-100 text-2xl leading-normal ml-0 md:ml-2 rounded p-2" style="max-width: 650px"
+                        <span class="text-surface-700 dark:text-surface-100 text-2xl leading-normal ml-0 md:ml-2 rounded-md p-2" style="max-width: 650px"
                             >La urbanizacion Campiña II "Barrio Magisterio", en apego a la Ley 1551 de participacion popular se organiza para consolidar la organizacion territorial de bases, donde se reconoce a un vecino de la urbanizacion, a todo
                             ciudadano Boliviano mayor de edad y habil por derecho y/o titular de familia, propietario de la vivienda asentada en la jurisdiccion de la organizacion mencionada, donde se asignara derechos y obligaciones en la respectiva
                             reglamentacion.</span
@@ -145,8 +146,8 @@ const galleriaResponsiveOptions = ref([
                     </div>
                 </div>
 
-                <div class="grid grid-cols-12 gap-4 mt-20 pb-2 md:pb-20">
-                    <div class="col-span-12 lg:col-span-6 my-auto flex flex-col lg:items-end text-center lg:text-right gap-4 border py-3 px-1 rounded">
+                <div class="grid grid-cols-12 gap-4 mt-20 pb-2 px-3 md:pb-20">
+                    <div class="col-span-12 lg:col-span-6 my-auto flex flex-col lg:items-end text-center lg:text-right gap-4 border py-3 px-5 rounded-lg">
                         <div class="flex items-center justify-center bg-teal-100 self-center lg:self-end" style="width: 4.2rem; height: 4.2rem; border-radius: 10px">
                             <i class="pi pi-fw pi-building !text-4xl bg-teal-100"></i>
                         </div>

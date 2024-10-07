@@ -1,6 +1,7 @@
 <script setup>
 import { onBeforeMount, onMounted, ref } from 'vue';
 import { useToast } from 'primevue/usetoast';
+import { fetchListaSocios } from '@/service/peticionesApi';
 import { fetchListaSociosPropiedadesUsuarios } from '@/service/peticionesApi';
 import { fetchRegistrarNuevoSocio } from '@/service/PeticionesApiPost';
 
@@ -8,7 +9,10 @@ const socios = ref(null);
 const socio = ref(null);
 const options = ref(['list', 'grid']);
 const layout = ref('list');
+const modalRegistroNuevoSocio = ref(false);
 const modalRegistroNuevaPropiedad = ref(false);
+const sociosListaBox = ref([]);
+const propiedad = ref(null);
 const submitted = ref(false);
 const password = ref('');
 const toast = useToast();
@@ -24,6 +28,8 @@ const loadSocios = async () => {
 };
 
 onBeforeMount(loadSocios);
+
+
 
 /**
  * Funcion para registrar un nuevo socio
@@ -50,7 +56,7 @@ async function registrarNuevoSocio() {
         if (!respuesta.status === 201) {
             throw new Error('Error al intentar registrar al nuevo socio.');
         } else {
-            cerrarModal();
+            cerrarModalRegistroSocio();
             await loadSocios();
             toast.add({ severity: 'success', summary: 'Socio registrado', detail: 'El socio se registro correctamente.', life: 5000 });
         }
@@ -60,8 +66,28 @@ async function registrarNuevoSocio() {
     }
 }
 
+async function obtenerSocios() {
+    try {
+        const response = await fetchListaSocios();
+        sociosListaBox.value = response.map((item) => ({
+            name: item.nombre_socio + ' ' + item.primer_apellido_socio + ' ' + item.segundo_apellido_socio,
+            code: item.id
+        }));
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al extraer los datos.';
+    }
+}
+
+/**
+ * Funcion para abrir el modal de registro de una nueva propiedad a nombre de un socio
+ */
+function registrarNuevaPropiedad() {
+    console.log('Registrar una nueva propiedad');
+}
+
 function abrirNuevoModalRegistroSocio() {
-    modalRegistroNuevaPropiedad.value = true;
+    modalRegistroNuevoSocio.value = true;
     socio.value = {
         nombre_socio: '',
         primer_apellido_socio: '',
@@ -75,12 +101,20 @@ function abrirNuevoModalRegistroSocio() {
 }
 
 function abrirNuevoModalRegistroPropiedad() {
+    obtenerSocios();
+    modalRegistroNuevaPropiedad.value = true;
     console.log('Registrar una nueva propiedad');
 }
 
-function cerrarModal() {
+function cerrarModalRegistroSocio() {
+    modalRegistroNuevoSocio.value = false;
+    submitted.value = false;
+}
+
+function cerrarModalRegistroPropiedad() {
     modalRegistroNuevaPropiedad.value = false;
     submitted.value = false;
+    socio.value= null;
 }
 </script>
 
@@ -117,8 +151,6 @@ function cerrarModal() {
                                 </span>
                             </div>
                         </div>
-
-
                     </div>
                 </template>
 
@@ -146,7 +178,7 @@ function cerrarModal() {
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="modalRegistroNuevaPropiedad" :style="{ width: '450px' }" header="Asignar una multa a un propietario" :modal="true">
+        <Dialog v-model:visible="modalRegistroNuevoSocio" :style="{ width: '450px' }" header="Asignar una multa a un propietario" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="nombre_socio" class="block font-bold mb-3"> Nombre del socio : </label>
@@ -193,8 +225,30 @@ function cerrarModal() {
                 </div>
             </div>
             <template #footer>
-                <Button label="Cancelar" icon="pi pi-times" text @click="cerrarModal" />
+                <Button label="Cancelar" icon="pi pi-times" text @click="cerrarModalRegistroSocio" />
                 <Button label="Guardar" icon="pi pi-check" @click="registrarNuevoSocio" />
+            </template>
+        </Dialog>
+
+        <Dialog v-model:visible="modalRegistroNuevaPropiedad" :style="{ width: '450px' }" header="Asignar una multa a un propietario" :modal="true">
+            <div class="flex flex-col gap-6">
+                <div>
+                    <label for="nombre" class="block font-bold mb-3">Nombre del socio: </label>
+                    <Listbox v-model="socio" :options="sociosListaBox" optionLabel="name" :filter="true" />
+                    <Message severity="secondary" v-if="socio">Socio seleccionado: {{ socio.name }}</Message>
+                </div>
+                <div>
+                    <label for="nombre" class="block font-bold mb-3">Cuadra (Reformular tabla, id debe ser ingresado con formato de string): </label>
+                    <InputText type="text" placeholder="Default" fluid/>
+                </div>
+                <div>
+                    <label for="descripcion_propiedad" class="block font-bold mb-3">Descripcion de la propiedad : </label>
+                    <Textarea placeholder="Registra la descripcion de la propiedad. Considere los detalles de esta." :autoResize="true" rows="2" cols="30" fluid/>
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Cancelar" icon="pi pi-times" text @click="cerrarModalRegistroPropiedad" />
+                <Button label="Guardar" icon="pi pi-check" @click="registrarNuevaPropiedad" />
             </template>
         </Dialog>
     </div>
