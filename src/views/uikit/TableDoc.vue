@@ -89,6 +89,7 @@ onBeforeMount(() => {
     });
     CustomerService.getCustomersLarge().then((data) => (customers2.value = data));
     CustomerService.getCustomersMedium().then((data) => (customers3.value = data));
+    console.log(customers3);
 
     initFilters1();
 });

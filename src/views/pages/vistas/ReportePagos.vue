@@ -1,12 +1,20 @@
 <script setup>
+import { FilterMatchMode } from '@primevue/core/api';
 import { onBeforeMount, watch, ref } from 'vue';
-import { fetchListaSociosRecibos } from '@/service/reportesApi';
+import { fetchListaSociosPagos } from '@/service/reportesApi';
+import { useToast } from 'primevue/usetoast';
 
+const toast = useToast();
 const loading = ref(false);
-const sociosRecibos = ref(null);
+const sociosRecibos = ref([]);
 const now = new Date();
 const fechaInicio = ref(new Date(now.getFullYear(), now.getMonth() - 1, 1));
 const fechaFin = ref(new Date(now.getFullYear(), now.getMonth(), 0));
+
+// varaible de busqueda
+const filters = ref({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS }
+});
 
 async function load() {
     loading.value = true;
@@ -18,12 +26,11 @@ async function load() {
 async function listaSocioRecibos() {
     const fechaInicioFormatted = fechaInicio.value.toISOString().slice(0, 10);
     const fechaFinFormatted = fechaFin.value.toISOString().slice(0, 10);
-    console.log(fechaInicioFormatted, ' / ', fechaFinFormatted);
-    const listaSocios = await fetchListaSociosRecibos(fechaInicioFormatted, fechaFinFormatted);
+    const listaSocios = await fetchListaSociosPagos(fechaInicioFormatted, fechaFinFormatted);
     if (listaSocios) {
-        console.log('Lista de socios recibos:', listaSocios);
         sociosRecibos.value = listaSocios;
     } else {
+        toast.add({ severity: 'error', summary: 'Falla al obtener la lista de socios y recibos', detail: 'No se pudo obtener la lista de socios y recibos.', life: 5000 });
         console.error('No se pudo obtener la lista de multas.');
     }
 }
@@ -41,35 +48,65 @@ function getEstadoLabel(status) {
 </script>
 
 <template>
-    <div className="card">
-        <div class="font-semibold text-xl mb-4">Reporte de pagos</div>
-        <div class="font-semibold text-xl my-6"><Message severity="success">Selecciones el rango de fechas para la busqueda de reportes de pagos.</Message></div>
-        <div class="flex flex-col md:flex-row gap-4">
-            <div class="font-semibold text-xm my-2">Fecha de inicio:</div>
-            <DatePicker id="fechaInicio" class="w-72 mb-1" v-model="fechaInicio" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd"></DatePicker>
+    <Toolbar>
+        <template #start>
+            <div className="card">
+                <div class="font-semibold text-xl mb-4">Reporte de pagos</div>
+                <div class="font-semibold text-xl my-6"><Message severity="success">Selecciones el rango de fechas para la busqueda de reportes de pagos.</Message></div>
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="font-semibold text-xm my-2">Fecha de inicio:</div>
+                    <DatePicker id="fechaInicio" class="w-72 mb-1" v-model="fechaInicio" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd"></DatePicker>
 
-            <div class="font-semibold text-xm my-2">Fecha final :</div>
-            <DatePicker id="fechaFin" class="w-72 mb-1" v-model="fechaFin" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd"></DatePicker>
+                    <div class="font-semibold text-xm my-2">Fecha final :</div>
+                    <DatePicker id="fechaFin" class="w-72 mb-1" v-model="fechaFin" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd"></DatePicker>
 
-            <Button type="button" class="mr-3 mb-1" label="Search" icon="pi pi-search" iconPos="right" :loading="loading" @click="load()" />
-        </div>
-    </div>
+                    <Button type="button" class="mr-3 mb-1" label="Search" icon="pi pi-search" iconPos="right" :loading="loading" @click="load()" />
+                </div>
+            </div>
+        </template>
+    </Toolbar>
 
-    <div class="card">
-        <div class="font-semibold text-xl mb-4">Lista de socios y sus respectivos recibos</div>
-        <DataTable :value="sociosRecibos" rowGroupMode="subheader" groupRowsBy="nombre_socio" sortMode="single" sortField="nombre_socio" :sortOrder="1" scrollable scrollHeight="500px" tableStyle="min-width: 50rem">
-            <template #groupheader="slotProps">
-                <div class="flex items-center gap-2">
-                    <i class="pi pi-fw pi-credit-card text-blue-700"></i>
-                    <span class="font-medium text-gray-700">{{ slotProps.data.ci_socio }}</span>
-                    <i class="pi pi-fw pi-user text-blue-700"></i>
-                    <span
-                        ><Message severity="info">{{ slotProps.data.nombre_socio }}</Message></span
-                    >
+    <div class="card p-7">
+        <DataTable
+            ref="dt"
+            :value="sociosRecibos"
+            groupRowsBy="nombre_socio"
+            scrollable
+            scrollHeight="500px"
+            dataKey="id"
+            :paginator="true"
+            :rows="10"
+            :filters="filters"
+            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+            :rowsPerPageOptions="[5, 10, 25]"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+        >
+            <template #header>
+                <div class="flex flex-wrap gap-2 items-center justify-between">
+
+                    <h4 class="m-0 font-bold"> <i class="pi pi-home"></i> Lista de socios y sus propiedades</h4>
+                    <IconField>
+                        <InputIcon>
+                            <i class="pi pi-search" />
+                        </InputIcon>
+                        <InputText v-model="filters['global'].value" placeholder="Buscar..." />
+                    </IconField>
                 </div>
             </template>
-            <Column field="nombre_socio" header="Nombre del socio"></Column>
-            <Column field="propiedades" header="Lista de recibos" style="min-width: 200px">
+
+            <Column field="nombre_socio" header="Nombre del socio o representante" style="width: 250px">
+                <template #groupheader="slotProps">
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-fw pi-credit-card text-blue-700"></i>
+                        <span class="font-medium text-gray-700">{{ slotProps.data.ci_socio }}</span>
+                        <i class="pi pi-fw pi-user text-blue-700"></i>
+                        <span
+                            ><Message severity="info">{{ slotProps.data.nombre_socio }}</Message></span
+                        >
+                    </div>
+                </template>
+            </Column>
+            <Column field="propiedades" header="Lista de deudas organizadas por propiedad" style="min-width: 00px">
                 <template #body="slotProps">
                     <div v-if="slotProps.data.propiedades && slotProps.data.propiedades.length > 0">
                         <div v-for="(propiedad, index) in slotProps.data.propiedades" :key="index">
@@ -105,9 +142,6 @@ function getEstadoLabel(status) {
                     </div>
                 </template>
             </Column>
-            <template #groupfooter="slotProps">
-                <div class="flex justify-end font-bold w-full">Total de multas: {{ slotProps.total_multas_propiedad }}</div>
-            </template>
         </DataTable>
     </div>
 </template>

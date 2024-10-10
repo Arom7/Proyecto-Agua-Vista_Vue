@@ -27,13 +27,11 @@ async function enviarSesion() {
         if (response.status === 200) {
             router.push('/dashboard');
         } else {
-            errorMessage.value = 'Usuario o contraseña incorrectos.';
-            display.value = true;
+            throw new Error('Usuario o contraseña incorrectos.');
         }
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Falla al iniciar sesion', detail: 'No se pudo iniciar sesion', life: 5000 });
+        display.value=true;
         console.error('Se produjo un error:', error.message);
-        errorMessage.value = 'Se produjo un error al intentar iniciar sesión. Inténtalo de nuevo.';
     }
 }
 

@@ -57,15 +57,12 @@ function confirmDeleteSelected() {
     deleteProductsDialog.value = true;
 }
 
-function getStatusLabel(status) {
+function getEstadoLabel(status) {
     switch (status) {
-        case 'INSTOCK':
+        case 1 :
             return 'success';
 
-        case 'LOWSTOCK':
-            return 'warn';
-
-        case 'OUTOFSTOCK':
+        case 0:
             return 'danger';
 
         default:
@@ -176,6 +173,14 @@ async function registrarMulta() {
     }
 }
 
+function actualizarEstadoMulta(data) {
+    multa.value = data;
+    multa.value.estado_activo = !multa.value.estado_activo;
+    idMulta = multa.value.id;
+    console.log(multa.value);
+    actualizarMulta();
+}
+
 /**
  * Funciones metodo put/patch para multas
  */
@@ -196,7 +201,9 @@ async function actualizarMulta() {
         if (response.status != 200) {
             throw new Error(`Error en la solicitud, mensaje: ${response.message}`);
         }
+        console.log(response);
         hideDialog();
+        loadMultas();
     } catch (error) {
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
@@ -272,12 +279,13 @@ async function registrarMultaPropiedadSocio() {
                 </Column>
                 <Column field="inventoryStatus" header="Estado" sortable style="min-width: 12rem">
                     <template #body="slotProps">
-                        <Tag :value="slotProps.data.inventoryStatus" :severity="getStatusLabel(slotProps.data.inventoryStatus)" />
+                        <Tag :value="slotProps.data.estado_activo == 1? 'Activo' : 'Inactivo'" :severity="getEstadoLabel(slotProps.data.estado_activo)" />
                     </template>
                 </Column>
                 <Column :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
-                        <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editarMulta(slotProps.data)" />
+                        <Button icon="pi pi-power-off" severity="info" outlined rounded @click="actualizarEstadoMulta(slotProps.data)"/>
+                        <Button icon="pi pi-pencil" outlined rounded class="mx-2" @click="editarMulta(slotProps.data)" />
                         <Button icon="pi pi-trash" outlined rounded severity="danger" @click="eliminarMulta(slotProps.data)" />
                     </template>
                 </Column>

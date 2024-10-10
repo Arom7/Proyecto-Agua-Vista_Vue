@@ -143,6 +143,7 @@ const loadRecibos = async () => {
     const listaRecibos = await fetchListaRecibos();
     if (listaRecibos) {
         recibos.value = listaRecibos;
+        console.log(recibos.value);
     } else {
         console.error('No se pudo obtener la lista de recibos.');
     }
@@ -207,6 +208,10 @@ const codigoPropiedad = async (socioId) => {
 // funcion GET para buscar propiedad por medidor
 async function busquedaPropiedadSocio() {
     try {
+        if(id_medidor.value === null) {
+            reciboDialog.value = false;
+            throw new Error('El campo de medidor es requerido.');
+        }
         busquedaRealizada.value = true;
         const response = await fetchBusquedaPropiedadSocio(id_medidor.value);
         if (recibo.value) {
@@ -216,6 +221,7 @@ async function busquedaPropiedadSocio() {
             };
         }
     } catch (error) {
+        toast.add({ severity: 'error', summary: 'Falla al realizar la busqueda de una propiedad', detail: 'El numero de medidor es requerido', life: 5000 });
         console.error('Se produjo un error:', error.message);
     }
 }
@@ -455,7 +461,7 @@ async function actualizaRecibo() {
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-6">
                         <label for="id_medidor" class="block font-bold mb-2 mr-1">Numero de Medidor :</label>
-                        <InputNumber id="id_medidor" v-model.trim="id_medidor" class="mr-2" fluid />
+                        <InputNumber id="id_medidor" v-model.trim="id_medidor" :disabled="busquedaRealizada" class="mr-2" fluid />
                         <small v-if="submitted && !id_medidor" class="text-red-500">El campo es requerido.</small>
                     </div>
                     <div class="mt-8">
@@ -493,12 +499,11 @@ async function actualizaRecibo() {
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="reciboUpdate" :style="{ width: '450px' }" header="Actualizar pre-aviso" :modal="true">
+        <Dialog v-model:visible="reciboUpdate" :style="{ width: '400px' }" header="Actualizar pre-aviso" :modal="true">
             <div class="flex flex-col gap-6">
-                <div>
-                    <label for="nombre" class="block font-bold mb-3">Nombre del socio: </label>
-                    <Listbox v-model="socio" :options="sociosListaBox" optionLabel="name" :filter="true" />
-                    <Message severity="secondary" v-if="socio">Socio seleccionado: {{ socio.name }}</Message>
+                <div class="py-3">
+                    <label for="mes_correspondiente" class="block font-bold mb-3 mr-3">Socio seleccionado: </label>
+                    <Message severity="secondary" v-if="socio"> {{ socio.name }}</Message>
                 </div>
                 <div class="flex flex-col">
                     <label for="mes_correspondiente" class="block font-bold mb-3 mr-3">Mes correspondiente: </label>
@@ -517,7 +522,7 @@ async function actualizaRecibo() {
                     <small v-if="submitted && !recibo.lectura_actual" class="text-red-500 mx-2">El campo es requerido.</small>
                     <div class="col-span-6">
                         <label for="codigo_propiedad" class="block font-bold mb-3">Codigo de propiedad: </label>
-                        <Message severity="secondary" v-if="!socioHaCambiado.value">Codigo Seleccionado: {{ recibo.codigo_propiedad }}</Message>
+                        <Message severity="secondary" v-if="!socioHaCambiado.value">{{ recibo.codigo_propiedad }}</Message>
                         <div v-else>
                             <Select v-model="recibo.codigo_propiedad" :options="propiedadesValues" optionLabel="codigo_propiedad" placeholder="Select" />
                         </div>

@@ -26,8 +26,7 @@ const model = ref([
                 label: 'Mantenimiento',
                 icon: 'pi pi-wrench',
                 items: [
-                    { label: 'Bomba de agua', icon: 'pi pi-spin pi-cog', to: '/BombaDeAgua' },
-                    { label: 'Pozo de agua', icon: 'pi pi-spin pi-cog', to: '/PozoDeAgua' }
+                    { label: 'Bomba de agua', icon: 'pi pi-spin pi-cog', to: '/BombaDeAgua/PozoAgua' },
                 ]
             }
         ]
