@@ -5,9 +5,9 @@ import { onBeforeMount, onMounted, ref, watch, computed } from 'vue';
 import { fetchListaRecibos, fetchListaSocios, fetchListaPropiedades, fetchBusquedaPropiedadSocio } from '@/service/peticionesApi';
 import { fetchRegistrarNuevoRecibo } from '@/service/PeticionesApiPost';
 import { fetchActualizarRecibo } from '@/service/PeticionesApiPut';
-
+import { useStore } from 'vuex';
 //variables reactivas
-
+const store = useStore();
 const toast = useToast();
 const dt = ref();
 const recibos = ref();
@@ -38,6 +38,7 @@ const propiedadSocio = ref({
 });
 const busquedaRealizada = ref(false);
 const detalleRecibo = ref({});
+
 let socioOriginal = null;
 let cambio = false;
 
@@ -144,6 +145,7 @@ const loadRecibos = async () => {
     if (listaRecibos) {
         recibos.value = listaRecibos;
         console.log(recibos.value);
+        console.log(store.state.token);
     } else {
         console.error('No se pudo obtener la lista de recibos.');
     }

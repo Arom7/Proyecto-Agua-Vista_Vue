@@ -1,6 +1,7 @@
 import AppLayout from '@/layout/AppLayout.vue';
 import Landing from '@/views/pages/Landing.vue';
 import { createRouter, createWebHistory } from 'vue-router';
+import store from '@/store';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -134,7 +135,7 @@ const router = createRouter({
                 },{
                     path: '/BombaDeAgua/PozoAgua',
                     name: 'BombadeAgua',
-                    component: () => import('@/views/pages/vistas/mantenimiento/pozoBomba.vue')
+                    component: () => import('@/views/pages/vistas/mantenimiento/PozoBomba.vue')
                 }
 
             ]
@@ -161,6 +162,15 @@ const router = createRouter({
             component: () => import('@/views/pages/auth/Error.vue')
         }
     ]
+});
+
+router.beforeEach((to, from, next) => {
+    console.log('token: ', store.getters.isAuthenticated);
+    if (to.name !== 'login' && to.name !== 'landing' && !store.getters.isAuthenticated){
+        next({ name: 'login' });
+    } else {
+        next();
+    }
 });
 
 export default router;

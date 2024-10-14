@@ -1,3 +1,4 @@
+const token = localStorage.getItem('token');
 const url = 'http://127.0.0.1:8000/api';
 
 /**
@@ -6,7 +7,11 @@ const url = 'http://127.0.0.1:8000/api';
  */
 export async function fetchListaSociosPropiedadesUsuarios() {
     try {
-        const response = await fetch(`${url}/propiedades/socios`);
+        const response = await fetch(`${url}/propiedades/socios`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         if (!response.ok) {
             throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
         }
@@ -26,7 +31,11 @@ export async function fetchListaSociosPropiedadesUsuarios() {
 
 export async function fetchListaSocios() {
     try {
-        const response = await fetch(`${url}/socios`);
+        const response = await fetch(`${url}/socios`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         if (!response.ok) {
             throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
         }
@@ -45,7 +54,11 @@ export async function fetchListaSocios() {
 
 export async function fetchListaRecibos() {
     try {
-        const response = await fetch(`${url}/recibos`);
+        const response = await fetch(`${url}/recibos`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         if (!response.ok) {
             throw new Error(`Error en la solicitud: ${response.status}`);
         }
@@ -63,7 +76,11 @@ export async function fetchListaRecibos() {
 
 export async function fetchListaMultas() {
     try {
-        const response = await fetch(`${url}/multas`);
+        const response = await fetch(`${url}/multas`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         if (!response.ok) {
             throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
         }
@@ -81,7 +98,11 @@ export async function fetchListaMultas() {
  */
 export async function fetchListaPropiedades(socioId) {
     try {
-        const response = await fetch(`${url}/propiedades/socio/${socioId}`);
+        const response = await fetch(`${url}/propiedades/socio/${socioId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         if (!response.ok) {
             throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
         }
@@ -109,6 +130,7 @@ export async function fetchGuardarMulta(datos) {
             method: 'POST',
             body: JSON.stringify(data),
             headers: {
+                Authorization: `Bearer ${token}`,
                 'Content-type': 'application/json;'
             }
         });
@@ -135,6 +157,7 @@ export async function fetchRegistrarMulta(data) {
             method: 'POST',
             body: JSON.stringify(data),
             headers: {
+                Authorization: `Bearer ${token}`,
                 'Content-type': 'application/json;'
             }
         });
@@ -149,8 +172,6 @@ export async function fetchRegistrarMulta(data) {
     }
 }
 
-
-
 /**
  * Petición PUT para actualizar una multa.
  * @returns {Promise<Array>}
@@ -162,6 +183,7 @@ export async function fetchActualizacionMulta(idMulta, multa) {
             method: 'PUT',
             body: JSON.stringify(multa),
             headers: {
+                Authorization: `Bearer ${token}`,
                 'Content-type': 'application/json;'
             }
         });
@@ -177,16 +199,37 @@ export async function fetchActualizacionMulta(idMulta, multa) {
 }
 
 export async function fetchBusquedaPropiedadSocio(id_medidor) {
-    try{
-        const response = await fetch(`${url}/busqueda-medidor/propiedades/${id_medidor}`);
+    try {
+        const response = await fetch(`${url}/busqueda-medidor/propiedades/${id_medidor}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         if (!response.ok) {
             throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
         return data.medidor.propiedad;
-    }catch(error){
+    } catch (error) {
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
     }
 }
 
+export async function fetchListaMantenimientos(token) {
+    try {
+        const response = await fetch(`${url}/lista/mantenimientos`, {
+            headers: {
+                'Authorization' : `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.mantenimientos;
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    }
+}

@@ -4,8 +4,10 @@ import { ref } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { useRouter } from 'vue-router';
 import { fetchAccesoSocios } from '@/service/PeticionesApiPost';
+import { useStore } from 'vuex';
 
 // atributos
+const store = useStore();
 const toast = useToast();
 const username = ref('');
 const contrasenia = ref('');
@@ -20,17 +22,31 @@ let data = {
 };
 
 async function enviarSesion() {
+    if (!username.value || !contrasenia.value) {
+        toast.add({severity : 'error' , summary: 'Error de inicio de sesion' , detail : 'El nombre de usuario y la contraseña son requeridos.' , life : 3000});
+        return;
+    }
+
     data.username = username.value;
     data.contrasenia = contrasenia.value;
     try {
         const response = await fetchAccesoSocios(data);
-        if (response.status === 200) {
-            router.push('/dashboard');
+        if (response.status === true) {
+            console.log('Iniciando sesion...');
+            localStorage.setItem('token', response.token);
+            console.log('Verificar : ' , store.getters.isAuthenticated);
+            console.log('Token : ' , response.token);
+            store.commit('SET_TOKEN', response.token);
+            console.log('Vuex almacena token: ', store.state.token);
+            toast.add({ severity: 'success', summary: 'Iniciando sesion...', detail: response.message, life:3000 });
+            await router.push('/dashboard');
         } else {
             throw new Error('Usuario o contraseña incorrectos.');
         }
     } catch (error) {
         display.value=true;
+        username.value='';
+        contrasenia.value='';
         console.error('Se produjo un error:', error.message);
     }
 }
@@ -79,6 +95,7 @@ function close() {
                             </div>
                             <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Olvidaste tu contraseña?</span>
                         </div>
+                        <Toast />
                         <Button @click="enviarSesion" icon="pi pi-lock" label="Ingresar" class="w-full"/>
                         <Dialog header="Cuidado!" v-model:visible="display" :breakpoints="{ '960px': '75vw' }" :style="{ width: '30vw' , border: '1px solid red'}" :modal="true">
                             <i class="pi pi-exclamation-triangle mr-1" style="font-size: 2rem" />

@@ -1,8 +1,41 @@
 <script setup>
+import { ref } from 'vue';
 import { useLayout } from '@/layout/composables/layout';
 import AppConfigurator from './AppConfigurator.vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
+import { fetchLogout } from '@/service/reportesApi';
+const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
 
-const { onMenuToggle, toggleDarkMode, isDarkTheme} = useLayout();
+const store = useStore();
+const router = useRouter();
+const items = ref([
+    {
+        label: 'Actualizar Perfil',
+        icon: 'pi pi-refresh'
+    },
+    {
+        label: 'Home',
+        icon: 'pi pi-home'
+    },
+    {
+        separator: true
+    },
+    {
+        label: 'Cerrar Sesion',
+        icon: 'pi pi-sign-out',
+        command: () => {
+            logout();
+        }
+    }
+]);
+
+const logout = async () => {
+    console.log('Token : ' , store.state.token);
+    await fetchLogout(store.state.token);
+    store.commit('SET_TOKEN', null);
+    router.push('/auth/login');
+};
 </script>
 
 <template>
@@ -54,12 +87,18 @@ const { onMenuToggle, toggleDarkMode, isDarkTheme} = useLayout();
                         <i class="pi pi-inbox"></i>
                         <span>Messages</span>
                     </button>
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-user"></i>
-                        <span>Profile</span>
-                    </button>
+                    <div class="pi pi-user px-2 py-1">
+                        <SplitButton label="Perfil" :model="items" severity="secondary" class="font-bold font-arial-bold"></SplitButton>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+.font-arial-bold {
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+}
+</style>

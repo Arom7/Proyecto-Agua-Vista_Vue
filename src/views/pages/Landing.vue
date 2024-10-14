@@ -98,7 +98,7 @@ const galleriaResponsiveOptions = ref([
                     <p class="font-normal text-2xl leading-normal md:mt-4 text-gray-700">Cochabamba - Bolivia</p>
                 </div>
                 <div class="flex justify-center md:justify-end w-full">
-                    <img src="/ImagenesOTB/entradaOTB.png" alt="Imagen-entrada-OTB" class="md:w-auto rounded-lg" />
+                    <img src="/ImagenesOTB/entradaOTB.png" alt="Imagen-entrada-OTB" class="md:w-auto rounded-t-lg" />
                 </div>
             </div>
 

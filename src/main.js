@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
+import store from './store';
 import VCalendar from 'v-calendar';
 import 'v-calendar/style.css';
 
@@ -26,5 +27,6 @@ app.use(PrimeVue, {
 app.use(ToastService);
 app.use(VCalendar)
 app.use(ConfirmationService);
+app.use(store);
 
 app.mount('#app');

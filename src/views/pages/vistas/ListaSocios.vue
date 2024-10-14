@@ -16,6 +16,7 @@ const propiedad = ref(null);
 const submitted = ref(false);
 const password = ref('');
 const toast = useToast();
+const switchValue = ref(false);
 
 const loadSocios = async () => {
     const listaSocios = await fetchListaSociosPropiedadesUsuarios();
@@ -28,8 +29,6 @@ const loadSocios = async () => {
 };
 
 onBeforeMount(loadSocios);
-
-
 
 /**
  * Funcion para registrar un nuevo socio
@@ -114,7 +113,7 @@ function cerrarModalRegistroSocio() {
 function cerrarModalRegistroPropiedad() {
     modalRegistroNuevaPropiedad.value = false;
     submitted.value = false;
-    socio.value= null;
+    socio.value = null;
 }
 </script>
 
@@ -238,12 +237,39 @@ function cerrarModalRegistroPropiedad() {
                     <Message severity="secondary" v-if="socio">Socio seleccionado: {{ socio.name }}</Message>
                 </div>
                 <div>
-                    <label for="nombre" class="block font-bold mb-3">Cuadra (Reformular tabla, id debe ser ingresado con formato de string): </label>
-                    <InputText type="text" placeholder="Default" fluid/>
+                    <label for="direccion_propiedad" class="block font-bold mb-3">Direccion de la propiedad : </label>
+                    <InputText type="text" placeholder="Ingrese la direccion de la propiedad." fluid />
                 </div>
                 <div>
                     <label for="descripcion_propiedad" class="block font-bold mb-3">Descripcion de la propiedad : </label>
-                    <Textarea placeholder="Registra la descripcion de la propiedad. Considere los detalles de esta." :autoResize="true" rows="2" cols="30" fluid/>
+                    <Textarea placeholder="Registra la descripcion de la propiedad. Considere los detalles los detalles y caracteristicas de esta." :autoResize="true" rows="2" cols="30" fluid />
+                </div>
+                <div class="flex gap-10">
+                    <div>
+                        <label for="cuadra_propiedad" class="block font blod mb-3">Codigo del medidor : </label>
+                        <InputNumber v-model="inputNumberValue" showButtons mode="decimal"></InputNumber>
+                    </div>
+                    <div>
+                        <label for="id_propiedad" class="block font blod mb-3">Codigo la propiedad : </label>
+                        <InputText type="text" placeholder="Ingrese el codigo de propiedad." fluid />
+                    </div>
+                </div>
+                <div class="flex gap-12 text-center">
+                    <div>
+                        <div class="font-semibold mb-4 w-40" v-if="!switchValue">Medidor Nuevo :</div>
+                        <div class="font-semibold mb-4 w-40" v-if="switchValue">Medidor Usado : </div>
+                        <ToggleSwitch v-model="switchValue"/>
+                    </div>
+                    <div>
+                        <label for="id_medidor">Codigo del medidor : </label>
+                        <InputNumber mode="decimal" placeholder="Ingrese el codigo del medidor."></InputNumber>
+                    </div>
+                </div>
+                <div v-if="switchValue">
+                    <div>
+                        <label for="medida_inicial" class="m-2">Ingrese la medida del medidor : </label>
+                        <InputNumber mode="decimal" placeholder="Ingrese numero enteros."></InputNumber>
+                    </div>
                 </div>
             </div>
             <template #footer>
