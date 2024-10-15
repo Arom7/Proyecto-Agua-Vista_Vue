@@ -3,16 +3,18 @@ import { onBeforeMount, onMounted, ref } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { fetchListaSocios } from '@/service/peticionesApi';
 import { fetchListaSociosPropiedadesUsuarios } from '@/service/peticionesApi';
-import { fetchRegistrarNuevoSocio } from '@/service/PeticionesApiPost';
+import { fetchRegistrarNuevoSocio, fetchRegistrarNuevaPropiedad } from '@/service/PeticionesApiPost';
+import { useStore } from 'vuex';
 
+const store = useStore();
 const socios = ref(null);
 const socio = ref(null);
 const options = ref(['list', 'grid']);
-const layout = ref('list');
 const modalRegistroNuevoSocio = ref(false);
 const modalRegistroNuevaPropiedad = ref(false);
 const sociosListaBox = ref([]);
 const propiedad = ref(null);
+const medidor = ref(null);
 const submitted = ref(false);
 const password = ref('');
 const toast = useToast();
@@ -81,8 +83,33 @@ async function obtenerSocios() {
 /**
  * Funcion para abrir el modal de registro de una nueva propiedad a nombre de un socio
  */
-function registrarNuevaPropiedad() {
-    console.log('Registrar una nueva propiedad');
+async function registrarNuevaPropiedad() {
+    try {
+        submitted.value = true;
+        const data = {
+            id: propiedad.value.id,
+            socio_id: socio.value.code,
+            direccion_propiedad: propiedad.value.direccion_propiedad,
+            total_multas_propiedad: propiedad.value.total_multas_propiedad,
+            descripcion_propiedad: propiedad.value.descripcion_propiedad,
+            id_medidor: medidor.value.id_medidor,
+            lectura: medidor.value.lectura
+        };
+        if(!data.lectura){
+            data.lectura = 0;
+        }
+        const response = await fetchRegistrarNuevaPropiedad(data , store.state.token);
+        if (!response.status) {
+            throw new Error('Error al intentar registrar al nuevo socio.');
+        }
+        cerrarModalRegistroPropiedad();
+        await loadSocios();
+        toast.add({ severity: 'success', summary: 'La propiedad fue registrada', detail: 'El socio se registro correctamente.', life: 5000 });
+    } catch (error) {
+        cerrarModalRegistroPropiedad();
+        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar el socio', detail: 'Error al intentar registrar al nuevo socio.', life: 3000 });
+        console.error('Se produjo un error:', error.message, error.errores);
+    }
 }
 
 function abrirNuevoModalRegistroSocio() {
@@ -101,6 +128,18 @@ function abrirNuevoModalRegistroSocio() {
 
 function abrirNuevoModalRegistroPropiedad() {
     obtenerSocios();
+    propiedad.value = {
+        id: '',
+        socio_id: null,
+        descripcion_propiedad: '',
+        direccion_propiedad: '',
+        total_multas_propiedad: null
+    };
+
+    medidor.value = {
+        id_medidor: null,
+        lectura: null
+    };
     modalRegistroNuevaPropiedad.value = true;
     console.log('Registrar una nueva propiedad');
 }
@@ -238,37 +277,37 @@ function cerrarModalRegistroPropiedad() {
                 </div>
                 <div>
                     <label for="direccion_propiedad" class="block font-bold mb-3">Direccion de la propiedad : </label>
-                    <InputText type="text" placeholder="Ingrese la direccion de la propiedad." fluid />
+                    <InputText v-model="propiedad.direccion_propiedad" type="text" placeholder="Ingrese la direccion de la propiedad." fluid />
                 </div>
                 <div>
                     <label for="descripcion_propiedad" class="block font-bold mb-3">Descripcion de la propiedad : </label>
-                    <Textarea placeholder="Registra la descripcion de la propiedad. Considere los detalles los detalles y caracteristicas de esta." :autoResize="true" rows="2" cols="30" fluid />
+                    <Textarea v-model="propiedad.descripcion_propiedad" placeholder="Registra la descripcion de la propiedad. Considere los detalles los detalles y caracteristicas de esta." :autoResize="true" rows="2" cols="30" fluid />
                 </div>
                 <div class="flex gap-10">
                     <div>
-                        <label for="cuadra_propiedad" class="block font blod mb-3">Codigo del medidor : </label>
-                        <InputNumber v-model="inputNumberValue" showButtons mode="decimal"></InputNumber>
+                        <label for="cuadra_propiedad" class="block font blod mb-3">Codigo de propiedad : </label>
+                        <InputText v-model="propiedad.id" mode="decimal"></InputText>
                     </div>
                     <div>
-                        <label for="id_propiedad" class="block font blod mb-3">Codigo la propiedad : </label>
-                        <InputText type="text" placeholder="Ingrese el codigo de propiedad." fluid />
+                        <label for="id_propiedad" class="block font blod mb-3"> Acumulacion de multas : </label>
+                        <InputNumber v-model="propiedad.total_multas_propiedad" placeholder="Ingrese el codigo de propiedad." fluid />
                     </div>
                 </div>
                 <div class="flex gap-12 text-center">
                     <div>
                         <div class="font-semibold mb-4 w-40" v-if="!switchValue">Medidor Nuevo :</div>
-                        <div class="font-semibold mb-4 w-40" v-if="switchValue">Medidor Usado : </div>
-                        <ToggleSwitch v-model="switchValue"/>
+                        <div class="font-semibold mb-4 w-40" v-if="switchValue">Medidor Usado :</div>
+                        <ToggleSwitch v-model="switchValue" />
                     </div>
                     <div>
                         <label for="id_medidor">Codigo del medidor : </label>
-                        <InputNumber mode="decimal" placeholder="Ingrese el codigo del medidor."></InputNumber>
+                        <InputNumber v-model="medidor.id_medidor" mode="decimal" placeholder="Ingrese el codigo del medidor."></InputNumber>
                     </div>
                 </div>
                 <div v-if="switchValue">
                     <div>
-                        <label for="medida_inicial" class="m-2">Ingrese la medida del medidor : </label>
-                        <InputNumber mode="decimal" placeholder="Ingrese numero enteros."></InputNumber>
+                        <label for="medida_inicial" class="m-2">Ingrese la medida recorrida del medidor : </label>
+                        <InputNumber v-model="medidor.lectura" mode="decimal" placeholder="Ingrese numero enteros."></InputNumber>
                     </div>
                 </div>
             </div>

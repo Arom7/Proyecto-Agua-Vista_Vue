@@ -25,7 +25,7 @@ export async function fetchRegistrarNuevoSocio(data) {
 }
 
 export async function fetchAccesoSocios(data) {
-    try{
+    try {
         const response = await fetch(`${url}/login`, {
             method: 'POST',
             body: JSON.stringify(data),
@@ -38,7 +38,7 @@ export async function fetchAccesoSocios(data) {
         }
         console.log(response);
         return response.json();
-    }catch(error){
+    } catch (error) {
         console.error('Se produjo un error:', error.message);
         throw error;
     }
@@ -64,13 +64,34 @@ export async function fetchRegistrarNuevoRecibo(data) {
     }
 }
 
-export async function fetchRegistrarNuevoMantenimiento(data,token) {
+export async function fetchRegistrarNuevaPropiedad(data, token) {
+    try {
+        const response = await fetch(`${url}/registro-propiedades`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-type': 'application/json;'
+            }
+        });
+        if (!response.ok) {
+            const problema = await response.json();
+            throw new Error(`${problema.message}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        throw error;
+    }
+}
+
+export async function fetchRegistrarNuevoMantenimiento(data, token) {
     try {
         const response = await fetch(`${url}/mantenimientos`, {
             method: 'POST',
             body: JSON.stringify(data),
             headers: {
-                'Authorization': `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
                 'Content-type': 'application/json;'
             }
         });
