@@ -1,10 +1,10 @@
 <script setup>
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import { onBeforeMount, onMounted, ref, watch, computed } from 'vue';
-import { fetchListaRecibos, fetchListaSocios, fetchListaPropiedades, fetchBusquedaPropiedadSocio } from '@/service/peticionesApi';
+import { onBeforeMount, onMounted, ref, watch, computed, toDisplayString } from 'vue';
+import { fetchListaRecibos, fetchListaSocios, fetchListaPropiedades, fetchBusquedaPropiedadSocio, fetchRecibosEndeudados } from '@/service/peticionesApi';
 import { fetchRegistrarNuevoRecibo } from '@/service/PeticionesApiPost';
-import { fetchActualizarRecibo } from '@/service/PeticionesApiPut';
+import { fetchActualizarRecibo, fetchActualizarEstadoRecibo } from '@/service/PeticionesApiPut';
 import { useStore } from 'vuex';
 //variables reactivas
 const store = useStore();
@@ -38,6 +38,9 @@ const propiedadSocio = ref({
 });
 const busquedaRealizada = ref(false);
 const detalleRecibo = ref({});
+const modalRegistroPago = ref(false);
+const preavisoEndeudados = ref([]);
+const pagoSeleccionados = ref([]);
 
 let socioOriginal = null;
 let cambio = false;
@@ -45,6 +48,10 @@ let cambio = false;
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
+
+const search = (event) => {
+    sociosListaBox.value = [...Array(10).keys()].map((item) => event.query);
+};
 
 function confirmDeleteProduct(prod) {
     product.value = prod;
@@ -122,6 +129,18 @@ function abrir(data) {
 function close() {
     detallesRecibo.value = false;
     detalleRecibo.value = null;
+}
+
+function abrirNuevoPago() {
+    console.log('Nuevo pago');
+    modalRegistroPago.value = true;
+    obtenerSocios();
+}
+
+function cerraRegistroPago() {
+    console.log('Cerrar pago');
+    socio.value = null;
+    modalRegistroPago.value = false;
 }
 
 watch(socio, (newSocio, oldSocio) => {
@@ -210,7 +229,7 @@ const codigoPropiedad = async (socioId) => {
 // funcion GET para buscar propiedad por medidor
 async function busquedaPropiedadSocio() {
     try {
-        if(id_medidor.value === null) {
+        if (id_medidor.value === null) {
             reciboDialog.value = false;
             throw new Error('El campo de medidor es requerido.');
         }
@@ -248,13 +267,55 @@ async function actualizaRecibo() {
         toast.add({ severity: 'error', summary: 'Falla al actualizar el recibo', detail: 'No se actualizo el recibo', life: 5000 });
     }
 }
+
+async function loadRecibosEndeudados() {
+    try {
+        console.log('Codigo de propiedad:', recibo.value.codigo_propiedad);
+        const response = await fetchRecibosEndeudados(recibo.value.codigo_propiedad);
+        if (response) {
+            preavisoEndeudados.value = response;
+            console.log(preavisoEndeudados.value);
+        } else {
+            console.error('No se pudo obtener la lista de recibos.');
+        }
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+    }
+}
+
+// Funcion de registro de pago
+async function registrarPago(){
+    console.log(pagoSeleccionados.value);
+    const ids = pagoSeleccionados.value.map(item => item.recibos.id);
+    console.log(ids);
+
+    for (const id of ids) {
+        try {
+            const response = await fetchActualizarEstadoRecibo(id);
+            if(!response.status === 200){
+                throw new Error('No se pudo actualizar el estado del recibo.');
+            }
+            toast.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo actualizado estado pagado.', life: 5000 });
+        } catch (error) {
+            toast.add({ severity: 'error', summary: 'Falla al actualizar el recibo', detail: 'No pudo actualizar el pago', life: 5000 });
+            console.error('Se produjo un error:', error.message);
+        }
+    }
+    pagoSeleccionados.value = [];
+    preavisoEndeudados.value = [];
+    propiedadesValues.value = [];
+    cerraRegistroPago();
+    await loadRecibos();
+}
+
 </script>
 <template>
     <div>
         <div class="card">
             <Toolbar class="mb-6">
                 <template #start>
-                    <Button label="Registrar nuevo recibo" icon="pi pi-plus" severity="secondary" class="mr-2" @click="openNew" />
+                    <Button label="Registrar nuevo recibo" icon="pi pi-plus" severity="secondary" @click="openNew" />
+                    <Button label="Registrar nuevo pago" icon="pi pi-dollar" severity="secondary" class="mx-4" @click="abrirNuevoPago" />
                     <Button label="Eliminar" icon="pi pi-trash" severity="secondary" @click="confirmDeleteSelected" :disabled="!recibosSeleccionados || !recibosSeleccionados.length" />
                 </template>
 
@@ -311,14 +372,14 @@ async function actualizaRecibo() {
                     <template #header>
                         <div class="text-xl font-bold text-emerald-400">Detalles del Pre-Aviso</div>
                     </template>
-                    <div class="border-2 border-emerald-500  rounded py-3">
+                    <div class="border-2 border-emerald-500 rounded py-3">
                         <div class="flex">
                             <div class="font-bold bg-auto rounded w-2/3 px-1 text-emerald-300">
                                 <div class="pl-5 text-lg mb-4">Sistema de agua potable AQUACUBE</div>
                                 <div class="text-center text-xl">"OTB Campiña II" - Quillacollo - Cochabamba - Bolivia</div>
                             </div>
                             <div class="text-xl pl-20 pt-5 font-bold">
-                                <h3> N° {{detalleRecibo.id}}</h3>
+                                <h3>N° {{ detalleRecibo.id }}</h3>
                             </div>
                         </div>
 
@@ -536,6 +597,49 @@ async function actualizaRecibo() {
             <template #footer>
                 <Button label="Cancelar" icon="pi pi-times" text @click="cerrarActualizacion" />
                 <Button label="Actualizar" icon="pi pi-check" @click="actualizaRecibo" />
+            </template>
+        </Dialog>
+
+        <Dialog v-model:visible="modalRegistroPago" :style="{ width: '350px' }" header="Actualizar pre-aviso" :modal="true">
+            <div class="flex flex-col gap-6">
+                <div class="py-3 grid">
+                    <label for="socio_id" class="block font-bold mb-3 mr-3">Realize la busqueda del nombre del socio: </label>
+                    <Select v-model="socio" :options="sociosListaBox" filter optionLabel="name" placeholder="Selecciona el nombre del socio" class="w-full" :invalid="socio === null" fluid>
+                        <template #value="slotProps">
+                            <div v-if="slotProps.value" class="flex items-center">
+                                <div>{{ slotProps.value.name }}</div>
+                            </div>
+                            <span v-else>
+                                {{ slotProps.placeholder }}
+                            </span>
+                        </template>
+                        <template #option="slotProps">
+                            <div class="flex items-center">
+                                <div>{{ slotProps.option.name }}</div>
+                            </div>
+                        </template>
+                    </Select>
+                </div>
+                <div class="flex mb-5">
+                    <div class="col-span-6 mx-2">
+                        <label for="codigo_propiedad" class="block font-bold mb-3">Codigo de la propiedad: </label>
+                        <Select v-model.trim="recibo.codigo_propiedad" :options="propiedadesValues" optionLabel="codigo_propiedad" placeholder="Select" class="w-full md:w-48" :invalid="recibo.codigo_propiedad === null" />
+                        <small v-if="submitted && !recibo.codigo_propiedad" class="text-red-500">El campo es requerido.</small>
+                    </div>
+                    <div class="px-6 pt-9">
+                        <Button label="Buscar" icon="pi pi-search" severity="info" @click="loadRecibosEndeudados" text raised />
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="">Seleccionar pagos: </label>
+                <MultiSelect v-model="pagoSeleccionados" :disabled="!preavisoEndeudados" :options="preavisoEndeudados" filter optionLabel="mes_correspondiente" display="chip" placeholder="Seleccionar los meses que desea pagar." class="w-full" fluid/>
+            </div>
+
+            <template #footer>
+                <Button label="Cancelar" icon="pi pi-times" text @click="cerraRegistroPago" />
+                <Button label="Registrar pago" icon="pi pi-check" @click="registrarPago" />
             </template>
         </Dialog>
 

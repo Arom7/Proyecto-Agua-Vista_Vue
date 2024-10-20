@@ -3,7 +3,7 @@ const token = localStorage.getItem('token');
 
 const url = 'http://127.0.0.1:8000/api';
 
-export async function fetchListaSociosDeudas(fechaInicio, fechaFin) {
+export async function fetchListaSociosDeudas(fechaInicio, fechaFin,token) {
     try {
         const response = await fetch(`${url}/socio/deudas/pagos/${fechaInicio}/${fechaFin}/0`, {
             headers: {

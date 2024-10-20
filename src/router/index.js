@@ -145,7 +145,16 @@ const router = createRouter({
             name: 'notfound',
             component: () => import('@/views/pages/NotFound.vue')
         },
-
+        {
+            path: '/auth/reseteo/email',
+            name: 'reseteoEmail',
+            component: () => import('@/views/pages/vistas/auth/ResetEmail.vue')
+        },
+        {
+            path: '/auth/reseteo/password',
+            name: 'reseteoContraseña',
+            component: () => import('@/views/pages/vistas/auth/Reset.vue')
+        },
         {
             path: '/auth/login',
             name: 'login',
@@ -160,10 +169,11 @@ const router = createRouter({
             path: '/auth/error',
             name: 'error',
             component: () => import('@/views/pages/auth/Error.vue')
-        }
+        },
     ]
 });
 
+/*
 router.beforeEach((to, from, next) => {
     console.log('token: ', store.getters.isAuthenticated);
     if (to.name !== 'login' && to.name !== 'landing' && !store.getters.isAuthenticated){
@@ -172,5 +182,6 @@ router.beforeEach((to, from, next) => {
         next();
     }
 });
+*/
 
 export default router;

@@ -38,3 +38,22 @@ export async function fetchActualizarMantenimiento(id,data,token) {
         throw error;
     }
 }
+
+export async function fetchActualizarEstadoRecibo(id) {
+    try{
+        const response = await fetch(`${url}/recibo/estado/pago/${id}`, {
+            method: 'PATCH',
+            headers: {
+                //'Authorization': `Bearer ${token}`,
+                'Content-type': 'application/json;'
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        return await response.json();
+    }catch(error){
+        console.error('Se produjo un error:', error.message);
+        throw error;
+    }
+}

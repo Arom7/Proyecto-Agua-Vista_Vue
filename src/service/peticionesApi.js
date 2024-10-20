@@ -78,7 +78,7 @@ export async function fetchListaMultas() {
     try {
         const response = await fetch(`${url}/multas`, {
             headers: {
-                Authorization: `Bearer ${token}`
+                //Authorization: `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -183,7 +183,7 @@ export async function fetchActualizacionMulta(idMulta, multa) {
             method: 'PUT',
             body: JSON.stringify(multa),
             headers: {
-                Authorization: `Bearer ${token}`,
+                //Authorization: `Bearer ${token}`,
                 'Content-type': 'application/json;'
             }
         });
@@ -220,7 +220,7 @@ export async function fetchListaMantenimientos(token) {
     try {
         const response = await fetch(`${url}/lista/mantenimientos`, {
             headers: {
-                'Authorization' : `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -228,6 +228,96 @@ export async function fetchListaMantenimientos(token) {
         }
         const data = await response.json();
         return data.mantenimientos;
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    }
+}
+
+export async function fetchRecibosEndeudados(id) {
+    try {
+        const response = await fetch(`${url}/endeudados/recibos/${id.codigo_propiedad}`, {
+            headers: {
+                //'Authorization' : `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.consumos;
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    }
+}
+
+export async function fetchSolicitudCantidadSocios() {
+    try {
+        const response = await fetch(`${url}/cantidad/socios`, {
+            headers: {
+                //'Authorization' : `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.cantidadSocios;
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    }
+}
+
+export async function fetchSolicitudCantidadPropiedades() {
+    try {
+        const response = await fetch(`${url}/cantidad/propiedades`, {
+            headers: {
+                //'Authorization' : `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.cantidadPropiedades;
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    }
+}
+
+export async function fetchSolicitudCantidadPreAvisosPagados() {
+    try {
+        const response = await fetch(`${url}/cantidad/recibos/pagados`, {
+            headers: {
+                //'Authorization' : `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.cantidadRecibosPagados;
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    }
+}
+
+export async function fetchSolicitudCantidadPreAvisosEndeudados() {
+    try {
+        const response = await fetch(`${url}/cantidad/recibos/pendientes`, {
+            headers: {
+                //'Authorization' : `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.cantidadRecibosPendientes;
     } catch (error) {
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';

@@ -3,7 +3,9 @@ import { FilterMatchMode } from '@primevue/core/api';
 import { onBeforeMount, watch, ref } from 'vue';
 import { fetchListaSociosPagos } from '@/service/reportesApi';
 import { useToast } from 'primevue/usetoast';
+import { useStore } from 'vuex';
 
+const store = useStore();
 const toast = useToast();
 const loading = ref(false);
 const sociosRecibos = ref([]);
@@ -26,7 +28,8 @@ async function load() {
 async function listaSocioRecibos() {
     const fechaInicioFormatted = fechaInicio.value.toISOString().slice(0, 10);
     const fechaFinFormatted = fechaFin.value.toISOString().slice(0, 10);
-    const listaSocios = await fetchListaSociosPagos(fechaInicioFormatted, fechaFinFormatted);
+
+    const listaSocios = await fetchListaSociosPagos(fechaInicioFormatted, fechaFinFormatted, store.state.token);
     if (listaSocios) {
         sociosRecibos.value = listaSocios;
     } else {

@@ -9,27 +9,25 @@ const model = ref([
         items: [{ label: 'Inicio', icon: 'pi pi-fw pi-home', to: '/' }]
     },
     {
-        label: 'Menu',
+        label: 'Menu de Control Agua',
         items: [
             { label: 'Lista de socios', icon: 'pi pi-fw pi-id-card', to: '/listaSocios' },
             { label: 'Lecturacion de recibos', icon: 'pi pi-fw pi-align-justify', to: '/lecturaRecibos' },
-            { label: 'Multas', icon: 'pi pi-fw pi-dollar', to: '/multas' },
-            {
-                label: 'Reportes',
-                icon: 'pi pi-file-export',
-                items: [
-                    { label: 'Reporte de pagos', icon: 'pi pi-fw pi-file-pdf', to: '/reportes/pagos' },
-                    { label: 'Reporte de deudas', icon: 'pi pi-fw pi-file-pdf', to: '/reportes/deudas' }
-                ]
-            },
-            {
-                label: 'Mantenimiento',
-                icon: 'pi pi-wrench',
-                items: [
-                    { label: 'Bomba - Pozo de agua', icon: 'pi pi-spin pi-cog', to: '/BombaDeAgua/PozoAgua' },
-                ]
-            }
+            { label: 'Multas', icon: 'pi pi-fw pi-dollar', to: '/multas' }
         ]
+    },
+    {
+        label: 'Reportes',
+        icon: 'pi pi-file-export',
+        items: [
+            { label: 'Reporte de pagos', icon: 'pi pi-fw pi-file-pdf', to: '/reportes/pagos' },
+            { label: 'Reporte de deudas', icon: 'pi pi-fw pi-file-pdf', to: '/reportes/deudas' }
+        ]
+    },
+    {
+        label: 'Mantenimiento',
+        icon: 'pi pi-wrench',
+        items: [{ label: 'Bomba - Pozo de agua', icon: 'pi pi-spin pi-cog', to: '/BombaDeAgua/PozoAgua' }]
     }
 ]);
 </script>

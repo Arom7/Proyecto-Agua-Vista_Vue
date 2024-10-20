@@ -16,7 +16,10 @@ const items = ref([
     },
     {
         label: 'Home',
-        icon: 'pi pi-home'
+        icon: 'pi pi-home',
+        command:()=>{
+            router.push('/dashboard');
+        }
     },
     {
         separator: true
@@ -31,7 +34,7 @@ const items = ref([
 ]);
 
 const logout = async () => {
-    console.log('Token : ' , store.state.token);
+    console.log('Token : ', store.state.token);
     await fetchLogout(store.state.token);
     store.commit('SET_TOKEN', null);
     router.push('/auth/login');
@@ -83,10 +86,6 @@ const logout = async () => {
 
             <div class="layout-topbar-menu hidden lg:block">
                 <div class="layout-topbar-menu-content">
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-inbox"></i>
-                        <span>Messages</span>
-                    </button>
                     <div class="pi pi-user px-2 py-1">
                         <SplitButton label="Perfil" :model="items" severity="secondary" class="font-bold font-arial-bold"></SplitButton>
                     </div>

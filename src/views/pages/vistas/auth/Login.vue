@@ -9,7 +9,7 @@ import { useStore } from 'vuex';
 // atributos
 const store = useStore();
 const toast = useToast();
-const username = ref('');
+const login = ref('');
 const contrasenia = ref('');
 const errorMessage = ref('');
 const checked = ref(false);
@@ -17,17 +17,17 @@ const router = useRouter();
 const display = ref(false);
 
 let data = {
-    username: '',
+    login: '',
     contrasenia: ''
 };
 
 async function enviarSesion() {
-    if (!username.value || !contrasenia.value) {
+    if (!login.value || !contrasenia.value) {
         toast.add({severity : 'error' , summary: 'Error de inicio de sesion' , detail : 'El nombre de usuario y la contraseña son requeridos.' , life : 3000});
         return;
     }
 
-    data.username = username.value;
+    data.login = login.value;
     data.contrasenia = contrasenia.value;
     try {
         const response = await fetchAccesoSocios(data);
@@ -45,7 +45,7 @@ async function enviarSesion() {
         }
     } catch (error) {
         display.value=true;
-        username.value='';
+        login.value='';
         contrasenia.value='';
         console.error('Se produjo un error:', error.message);
     }
@@ -84,8 +84,8 @@ function close() {
                     </div>
 
                     <div>
-                        <label for="username" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Nombre de usuario</label>
-                        <InputText id="username" type="text" placeholder="Ingrese su nombre de usuario" class="w-full md:w-[30rem] mb-8" v-model="username" />
+                        <label for="login" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Nombre de usuario</label>
+                        <InputText id="login" type="text" placeholder="Ingrese su nombre de usuario" class="w-full md:w-[30rem] mb-8" v-model="login" />
                         <label for="contrasenia" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Contraseña</label>
                         <Password id="contrasenia" v-model="contrasenia" placeholder="Ingrese su contraseña" :toggleMask="true" class="mb-4" fluid :feedback="false"></Password>
                         <div class="flex items-center justify-between mt-2 mb-8 gap-8">
@@ -93,14 +93,14 @@ function close() {
                                 <Checkbox v-model="checked" id="rememberme1" binary class="mr-2"></Checkbox>
                                 <label for="rememberme1">Remember me</label>
                             </div>
-                            <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Olvidaste tu contraseña?</span>
+                            <Button as="router-link" label="¿Olvidaste tu contraseña?" to="/auth/reseteo/email" text raised/>
                         </div>
                         <Toast />
                         <Button @click="enviarSesion" icon="pi pi-lock" label="Ingresar" class="w-full"/>
                         <Dialog header="Cuidado!" v-model:visible="display" :breakpoints="{ '960px': '75vw' }" :style="{ width: '30vw' , border: '1px solid red'}" :modal="true">
                             <i class="pi pi-exclamation-triangle mr-1" style="font-size: 2rem" />
                             <span>
-                                Ocurrio un error al iniciar sesion, verifica si tu username o tu contraseña sean las correctas.
+                                Ocurrio un error al iniciar sesion, verifica si tu username, correo electronico y la contraseña sean los correctos.
                             </span>
                             <template #footer>
                                 <Button icon="pi pi-times" label="Cerrar" @click="close" severity="danger" />
