@@ -19,12 +19,13 @@ const submitted = ref(false);
 const password = ref('');
 const toast = useToast();
 const switchValue = ref(false);
+const token = localStorage.getItem('authToken');
 
 const loadSocios = async () => {
-    const listaSocios = await fetchListaSociosPropiedadesUsuarios();
+    const listaSocios = await fetchListaSociosPropiedadesUsuarios(token);
     if (listaSocios) {
-        console.log('Lista de socios:', listaSocios);
         socios.value = listaSocios;
+        console.log(token);
     } else {
         console.error('No se pudo obtener la lista de socios.');
     }
@@ -32,10 +33,93 @@ const loadSocios = async () => {
 
 onBeforeMount(loadSocios);
 
+/*
+    Validacion de datos - Registro Socio
+*/
+function validarDatosSocio() {
+    const errores = [];
+    const reglasnombre = /^[a-zA-ZñÑ]+( [a-zA-ZñÑ]+)*$/;
+    const reglasapellido = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+$/;
+    const reglasci = /^\d+(-\d[A-Z])?$/;
+    const reglascontrasenia = /^.{8,}$/;
+
+    if (!socio.value.nombre_socio.trim()) {
+        errores.push('El nombre del socio es obligatorio.');
+    } else if (!reglasnombre.test(socio.value.nombre_socio)) {
+        errores.push('El nombre del socio solo puede contener letras y espacios.');
+    }
+    if (!socio.value.primer_apellido_socio.trim()) {
+        errores.push('El primer apellido del socio es obligatorio.');
+    } else if (!reglasapellido.test(socio.value.primer_apellido_socio)) {
+        errores.push('El apellido del socio solo puede contener letras y espacios.');
+    }
+    if (!socio.value.ci_socio) {
+        errores.push('El CI del socio es obligatorio.');
+    } else if (!reglasci.test(socio.value.ci_socio)) {
+        errores.push('El CI del socio no es válido.');
+    }
+    if (!socio.value.email) {
+        errores.push('El email del socio es obligatorio.');
+    } else if (!/\S+@\S+\.\S+/.test(socio.value.email)) {
+        errores.push('El email no es válido.');
+    }
+    if (!socio.value.contrasenia) {
+        errores.push('La contraseña es obligatoria.');
+    } else if (!reglascontrasenia.test(socio.value.email)) {
+        errores.push('El email no es válido.');
+    }
+    if (socio.value.contrasenia !== socio.value.confirmar_contrasenia) {
+        errores.push('Las contraseñas no coinciden.');
+    }
+    return errores;
+}
+
+/*
+    Validacion de datos - Registro Socio
+*/
+function validarDatosPropiedad(){
+    const errores = [];
+    const reglasTexto = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9.,\-]+([ ]+[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9.,\-]+)*$/;
+    const reglasCodigoPropiedad = /^[a-zA-Z]+-\d+$/;
+
+    if(!socio.value){
+        errores.push('El socio es requerido.');
+    }
+    if (!propiedad.value.id.trim()) {
+        errores.push('El codigo de propiedad es requerido.');
+    } else if (!reglasCodigoPropiedad.test(propiedad.value.id)) {
+        errores.push('Valor invalido, ingrese como los siguientes ejemplos : A-1 , B-3 , C-12.');
+    }
+    if (!propiedad.value.direccion_propiedad.trim()) {
+        errores.push('La direccion de la propiedad es requerida.');
+    } else if (!reglasTexto.test(propiedad.value.direccion_propiedad)) {
+        errores.push('Solo se aceptan los caracteres alfanumericos en la direccion.');
+    }
+    if (!reglasTexto.test(propiedad.value.descripcion_propiedad)) {
+        errores.push('Solo se aceptan los caracteres alfanumericos en la descripcion.');
+    }
+    if (propiedad.value.total_multas_propiedad < -1) {
+        errores.push('El total de multas de la propiedad es requerido.');
+    }
+    if(!medidor.value.id_medidor){
+        errores.push('El codigo del medidor es requerido.');
+    }
+    if(switchValue.value && !medidor.value.lectura){
+        errores.push('La lectura del medidor es requerida.');
+    }
+    return errores;
+}
+
 /**
  * Funcion para registrar un nuevo socio
  */
 async function registrarNuevoSocio() {
+    const errores = validarDatosSocio();
+    if (errores.length > 0) {
+        toast.add({ severity: 'error', summary: 'Error en la validacion de los datos del socio', detail: errores.join(' '), life: 7000 });
+        modalRegistroNuevoSocio.value = false;
+        return;
+    }
     try {
         submitted.value = true;
         const data = {
@@ -51,10 +135,9 @@ async function registrarNuevoSocio() {
         if (data.contrasenia !== data.confirmar_contrasenia) {
             throw new Error('Las contraseñas no coinciden.');
         }
+        const respuesta = await fetchRegistrarNuevoSocio(data, token);
 
-        const respuesta = await fetchRegistrarNuevoSocio(data);
-
-        if (!respuesta.status === 201) {
+        if (!respuesta.status) {
             throw new Error('Error al intentar registrar al nuevo socio.');
         } else {
             cerrarModalRegistroSocio();
@@ -69,7 +152,7 @@ async function registrarNuevoSocio() {
 
 async function obtenerSocios() {
     try {
-        const response = await fetchListaSocios();
+        const response = await fetchListaSocios(token);
         sociosListaBox.value = response.map((item) => ({
             name: item.nombre_socio + ' ' + item.primer_apellido_socio + ' ' + item.segundo_apellido_socio,
             code: item.id
@@ -84,6 +167,12 @@ async function obtenerSocios() {
  * Funcion para abrir el modal de registro de una nueva propiedad a nombre de un socio
  */
 async function registrarNuevaPropiedad() {
+    const errores = validarDatosPropiedad();
+    if (errores.length > 0) {
+        toast.add({ severity: 'error', summary: 'Error en la validacion de los datos del socio', detail: errores.join(' '), life: 7000 });
+        modalRegistroNuevaPropiedad.value = false;
+        return;
+    }
     try {
         submitted.value = true;
         const data = {
@@ -95,10 +184,14 @@ async function registrarNuevaPropiedad() {
             id_medidor: medidor.value.id_medidor,
             lectura: medidor.value.lectura
         };
-        if(!data.lectura){
+        if (!data.lectura) {
             data.lectura = 0;
         }
-        const response = await fetchRegistrarNuevaPropiedad(data , store.state.token);
+        if (!data.total_multas_propiedad) {
+            data.total_multas_propiedad = 0;
+        }
+        console.log(data);
+        const response = await fetchRegistrarNuevaPropiedad(data, token);
         if (!response.status) {
             throw new Error('Error al intentar registrar al nuevo socio.');
         }
@@ -107,8 +200,8 @@ async function registrarNuevaPropiedad() {
         toast.add({ severity: 'success', summary: 'La propiedad fue registrada', detail: 'El socio se registro correctamente.', life: 5000 });
     } catch (error) {
         cerrarModalRegistroPropiedad();
-        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar el socio', detail: 'Error al intentar registrar al nuevo socio.', life: 3000 });
-        console.error('Se produjo un error:', error.message, error.errores);
+        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar el socio', detail: error.message , life: 3000 });
+        console.error('Se produjo un error:', error.message);
     }
 }
 
@@ -196,15 +289,16 @@ function cerrarModalRegistroPropiedad() {
                 <div class="grid grid-cols-4 gap-4 p-4 rounded-md mb-3">
                     <Column field="propiedades" header="Lista de propiedades" style="min-width: 150px">
                         <template #body="slotProps">
-                            <div v-if="slotProps.data.propiedades && slotProps.data.propiedades.length > 0">
-                                <div v-for="(propiedad, index) in slotProps.data.propiedades" :key="index" class="pt-2 px-4 mx-12 rounded-lg shadow-sm">
-                                    <div class="flex items-center gap-2 mx-5">
+                            <div v-if="slotProps.data.propiedades && slotProps.data.propiedades.length > 0" class="">
+                                <div v-for="(propiedad, index) in slotProps.data.propiedades" :key="index" class="pt-2 my-2 px-4 mx-12 rounded-lg shadow-sm">
+                                    <div class="flex items-center gap-2 mx-5 my-3">
                                         <span>
                                             <Chip icon="pi pi-facebook" class="mr-2 mb-2"> Codigo de propiedad : {{ propiedad.id }} </Chip>
                                             <Chip icon="pi pi-facebook" class="mr-2 mb-2"> Descripcion de la propiedad : {{ propiedad.descripcion_propiedad }} </Chip>
-                                            <Chip icon="pi pi-facebook" class="mr-2 mb-2"> Ubicacion : {{ propiedad.cuadra_propiedad }} </Chip>
+                                            <Chip icon="pi pi-facebook" class="mr-2 mb-2"> Ubicacion : {{ propiedad.direccion_propiedad }} </Chip>
                                         </span>
                                     </div>
+                                    <hr />
                                 </div>
                             </div>
                             <div v-else>
@@ -216,22 +310,25 @@ function cerrarModalRegistroPropiedad() {
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="modalRegistroNuevoSocio" :style="{ width: '450px' }" header="Asignar una multa a un propietario" :modal="true">
+        <Dialog v-model:visible="modalRegistroNuevoSocio" :style="{ width: '500px' }" header="Asignar una nueva propiedad" :modal="true">
             <div class="flex flex-col gap-6">
-                <div>
-                    <label for="nombre_socio" class="block font-bold mb-3"> Nombre del socio : </label>
-                    <InputText id="nombre_socio" placeholder="Ingrese el nombre del socio." v-model.trim="socio.nombre_socio" required="true" autofocus :invalid="submitted && !socio.nombre_socio" fluid />
-                    <small v-if="submitted && !socio.nombre_socio" class="text-red-500">El campo es requerido.</small>
+                <div class="flex">
+                    <div>
+                        <label for="nombre_socio" class="block font-bold mb-3"> Nombre del socio : </label>
+                        <InputText id="nombre_socio" placeholder="Ingrese el nombre del socio." v-model.trim="socio.nombre_socio" required="true" autofocus :invalid="submitted && !socio.nombre_socio" fluid />
+                        <small v-if="submitted && !socio.nombre_socio" class="text-red-500">El campo es requerido.</small>
+                    </div>
+                    <div class="mx-2">
+                        <label for="primer_apellido_socio" class="block font-bold mb-3"> Primer apellido : </label>
+                        <InputText id="primer_apellido_socio" placeholder="Ingrese el primer apellido del socio." v-model.trim="socio.primer_apellido_socio" required="true" autofocus :invalid="submitted && !socio.primer_apellido_socio" fluid />
+                        <small v-if="submitted && !socio.primer_apellido_socio" class="text-red-500">Este campo es requerido.</small>
+                    </div>
+                    <div>
+                        <label for="segundo_apellido_socio" class="block font-bold mb-3"> Segundo apellido : </label>
+                        <InputText id="segundo_apellido_socio" placeholder="Ingrese el segundo apellido del socio." v-model.trim="socio.segundo_apellido_socio" required="true" autofocus fluid />
+                    </div>
                 </div>
-                <div>
-                    <label for="primer_apellido_socio" class="block font-bold mb-3"> Primer apellido del socio : </label>
-                    <InputText id="primer_apellido_socio" placeholder="Ingrese el primer apellido del socio." v-model.trim="socio.primer_apellido_socio" required="true" autofocus :invalid="submitted && !socio.primer_apellido_socio" fluid />
-                    <small v-if="submitted && !socio.primer_apellido_socio" class="text-red-500">Este campo es requerido.</small>
-                </div>
-                <div>
-                    <label for="segundo_apellido_socio" class="block font-bold mb-3"> Segundo apellido del socio : </label>
-                    <InputText id="segundo_apellido_socio" placeholder="Ingrese el segundo apellido del socio." v-model.trim="socio.segundo_apellido_socio" required="true" autofocus fluid />
-                </div>
+
                 <div>
                     <div class="font-semibold text-xl mb-6">Carnet de identidad del socio:</div>
                     <FloatLabel>
@@ -244,7 +341,7 @@ function cerrarModalRegistroPropiedad() {
                     <div class="font-semibold text-xl mb-6">Correo o Gmail del usuario :</div>
                     <FloatLabel>
                         <InputText id="email" type="text" v-model="socio.email" class="w-full" />
-                        <label for="email">El correo debe contener el formato correo@gmail.com</label>
+                        <label for="email">El correo debe contener el formato correo@....com</label>
                     </FloatLabel>
                     <small v-if="submitted && !socio.email" class="text-red-500 mx-2">Este campo es requerido.</small>
                 </div>
@@ -272,8 +369,21 @@ function cerrarModalRegistroPropiedad() {
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="nombre" class="block font-bold mb-3">Nombre del socio: </label>
-                    <Listbox v-model="socio" :options="sociosListaBox" optionLabel="name" :filter="true" />
-                    <Message severity="secondary" v-if="socio">Socio seleccionado: {{ socio.name }}</Message>
+                    <Select v-model="socio" :options="sociosListaBox" filter optionLabel="name" placeholder="Selecciona el nombre del socio" class="w-full" :invalid="socio === null" fluid>
+                        <template #value="slotProps">
+                            <div v-if="slotProps.value" class="flex items-center">
+                                <div>{{ slotProps.value.name }}</div>
+                            </div>
+                            <span v-else>
+                                {{ slotProps.placeholder }}
+                            </span>
+                        </template>
+                        <template #option="slotProps">
+                            <div class="flex items-center">
+                                <div>{{ slotProps.option.name }}</div>
+                            </div>
+                        </template>
+                    </Select>
                 </div>
                 <div>
                     <label for="direccion_propiedad" class="block font-bold mb-3">Direccion de la propiedad : </label>
@@ -290,7 +400,7 @@ function cerrarModalRegistroPropiedad() {
                     </div>
                     <div>
                         <label for="id_propiedad" class="block font blod mb-3"> Acumulacion de multas : </label>
-                        <InputNumber v-model="propiedad.total_multas_propiedad" placeholder="Ingrese el codigo de propiedad." fluid />
+                        <InputNumber v-model="propiedad.total_multas_propiedad" placeholder="Ingrese el codigo de propiedad." :min="0" fluid />
                     </div>
                 </div>
                 <div class="flex gap-12 text-center">

@@ -5,6 +5,7 @@ import { fetchListaSociosPagos } from '@/service/reportesApi';
 import { useToast } from 'primevue/usetoast';
 import { useStore } from 'vuex';
 
+const token = localStorage.getItem('authToken');
 const store = useStore();
 const toast = useToast();
 const loading = ref(false);
@@ -29,7 +30,7 @@ async function listaSocioRecibos() {
     const fechaInicioFormatted = fechaInicio.value.toISOString().slice(0, 10);
     const fechaFinFormatted = fechaFin.value.toISOString().slice(0, 10);
 
-    const listaSocios = await fetchListaSociosPagos(fechaInicioFormatted, fechaFinFormatted, store.state.token);
+    const listaSocios = await fetchListaSociosPagos(fechaInicioFormatted, fechaFinFormatted, token);
     if (listaSocios) {
         sociosRecibos.value = listaSocios;
     } else {
@@ -58,10 +59,10 @@ function getEstadoLabel(status) {
                 <div class="font-semibold text-xl my-6"><Message severity="success">Selecciones el rango de fechas para la busqueda de reportes de pagos.</Message></div>
                 <div class="flex flex-col md:flex-row gap-4">
                     <div class="font-semibold text-xm my-2">Fecha de inicio:</div>
-                    <DatePicker id="fechaInicio" class="w-72 mb-1" v-model="fechaInicio" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd"></DatePicker>
+                    <DatePicker id="fechaInicio" class="w-72 mb-1" v-model="fechaInicio" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd" :manualInput="false"></DatePicker>
 
                     <div class="font-semibold text-xm my-2">Fecha final :</div>
-                    <DatePicker id="fechaFin" class="w-72 mb-1" v-model="fechaFin" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd"></DatePicker>
+                    <DatePicker id="fechaFin" class="w-72 mb-1" v-model="fechaFin" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd" :manualInput="false"></DatePicker>
 
                     <Button type="button" class="mr-3 mb-1" label="Search" icon="pi pi-search" iconPos="right" :loading="loading" @click="load()" />
                 </div>

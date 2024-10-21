@@ -1,6 +1,5 @@
 <script setup>
 import { useLayout } from '@/layout/composables/layout';
-import { ProductService } from '@/service/ProductService';
 import { onMounted, ref, watch } from 'vue';
 import { fetchSolicitudCantidadSocios , fetchSolicitudCantidadPropiedades, fetchSolicitudCantidadPreAvisosEndeudados, fetchSolicitudCantidadPreAvisosPagados} from '@/service/peticionesApi';
 
@@ -10,18 +9,12 @@ const cantidadSocios = ref(null);
 const cantidadPropiedades = ref(null);
 const cantidadPreAvisosPagados = ref(null);
 const cantidadPreAvisosPendientes = ref(null);
-const products = ref(null);
 const chartData = ref();
 const chartOptions = ref(null);
-
-const items = ref([
-    { label: 'Add New', icon: 'pi pi-fw pi-plus' },
-    { label: 'Remove', icon: 'pi pi-fw pi-trash' }
-]);
+const token = localStorage.getItem('authToken');
 
 onMounted( async () => {
     await Promise.all([
-        ProductService.getProductsSmall().then((data) => (products.value = data)),
         consultarCantidadSocios(),
         consultarCantidadPropiedades(),
         consultarCantidadPreAvisosDeudas(),
@@ -32,19 +25,19 @@ onMounted( async () => {
 });
 
 async function consultarCantidadSocios() {
-    cantidadSocios.value =  await fetchSolicitudCantidadSocios();
+    cantidadSocios.value =  await fetchSolicitudCantidadSocios(token);
 }
 
 async function consultarCantidadPropiedades() {
-    cantidadPropiedades.value =  await fetchSolicitudCantidadPropiedades();
+    cantidadPropiedades.value =  await fetchSolicitudCantidadPropiedades(token);
 }
 
 async function consultarCantidadPreAvisosPagados() {
-    cantidadPreAvisosPagados.value =  await fetchSolicitudCantidadPreAvisosPagados();
+    cantidadPreAvisosPagados.value =  await fetchSolicitudCantidadPreAvisosPagados(token);
 }
 
 async function consultarCantidadPreAvisosDeudas() {
-    cantidadPreAvisosPendientes.value =  await fetchSolicitudCantidadPreAvisosEndeudados();
+    cantidadPreAvisosPendientes.value =  await fetchSolicitudCantidadPreAvisosEndeudados(token);
 }
 
 const setChartData = () => {
@@ -76,10 +69,6 @@ const setChartOptions = () => {
             }
         }
     };
-};
-
-const formatCurrency = (value) => {
-    return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 };
 
 watch([getPrimary, getSurface, isDarkTheme], () => {

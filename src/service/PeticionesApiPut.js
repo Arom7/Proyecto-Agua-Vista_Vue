@@ -1,12 +1,13 @@
 const url = 'http://127.0.0.1:8000/api';
 
-export async function fetchActualizarRecibo(id,data) {
+export async function fetchActualizarRecibo(id,data ,token) {
     try{
         const response = await fetch(`${url}/actualizar-recibo/${id}`, {
             method: 'PUT',
             body: JSON.stringify(data),
             headers: {
-                'Content-type': 'application/json;'
+                'Content-type': 'application/json;',
+                Authorization: `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -39,12 +40,12 @@ export async function fetchActualizarMantenimiento(id,data,token) {
     }
 }
 
-export async function fetchActualizarEstadoRecibo(id) {
+export async function fetchActualizarEstadoRecibo(id ,token) {
     try{
         const response = await fetch(`${url}/recibo/estado/pago/${id}`, {
             method: 'PATCH',
             headers: {
-                //'Authorization': `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
                 'Content-type': 'application/json;'
             }
         });

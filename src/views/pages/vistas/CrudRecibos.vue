@@ -7,6 +7,7 @@ import { fetchRegistrarNuevoRecibo } from '@/service/PeticionesApiPost';
 import { fetchActualizarRecibo, fetchActualizarEstadoRecibo } from '@/service/PeticionesApiPut';
 import { useStore } from 'vuex';
 //variables reactivas
+const token = localStorage.getItem('authToken');
 const store = useStore();
 const toast = useToast();
 const dt = ref();
@@ -113,6 +114,8 @@ function editarRecibo(datos) {
 function hideDialog() {
     reciboDialog.value = false;
     submitted.value = false;
+    id_medidor.value = null;
+    busquedaRealizada.value = false;
 }
 
 function cerrarActualizacion() {
@@ -160,11 +163,9 @@ const socioHaCambiado = computed(() => socio.value !== socioOriginal);
 
 // Peticion Get para obtener la lista de recibos
 const loadRecibos = async () => {
-    const listaRecibos = await fetchListaRecibos();
+    const listaRecibos = await fetchListaRecibos(token);
     if (listaRecibos) {
         recibos.value = listaRecibos;
-        console.log(recibos.value);
-        console.log(store.state.token);
     } else {
         console.error('No se pudo obtener la lista de recibos.');
     }
@@ -180,7 +181,7 @@ async function guardarRecibo() {
             recibo.value.id_socio = socio.value.code;
             recibo.value.codigo_propiedad = recibo.value.codigo_propiedad.codigo_propiedad;
         }
-        const response = await fetchRegistrarNuevoRecibo(recibo.value);
+        const response = await fetchRegistrarNuevoRecibo(recibo.value , token);
         if (response.status === 200) {
             toast.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo guardado correctamente.', life: 5000 });
             hideDialog();
@@ -199,7 +200,7 @@ async function guardarRecibo() {
 // Peticion Get para obtener la lista de socios
 async function obtenerSocios() {
     try {
-        const response = await fetchListaSocios();
+        const response = await fetchListaSocios(token);
         sociosListaBox.value = response.map((item) => ({
             name: item.nombre_socio + ' ' + item.primer_apellido_socio + ' ' + item.segundo_apellido_socio,
             code: item.id
@@ -213,7 +214,7 @@ async function obtenerSocios() {
 // Peticion Get para obtener la lista de propiedades de un socio
 const codigoPropiedad = async (socioId) => {
     try {
-        const response = await fetchListaPropiedades(socioId);
+        const response = await fetchListaPropiedades(socioId ,token);
         if (response && response.length > 0) {
             propiedadesValues.value = response.map((propiedad) => ({
                 codigo_propiedad: propiedad.id
@@ -234,7 +235,8 @@ async function busquedaPropiedadSocio() {
             throw new Error('El campo de medidor es requerido.');
         }
         busquedaRealizada.value = true;
-        const response = await fetchBusquedaPropiedadSocio(id_medidor.value);
+        const response = await fetchBusquedaPropiedadSocio(id_medidor.value , token);
+        console.log(response);
         if (recibo.value) {
             recibo.value = {
                 id_socio: response.socio.id,
@@ -254,7 +256,7 @@ async function actualizaRecibo() {
         let fechaFormateada = recibo.value.mes_correspondiente.toISOString().slice(0, 10);
         recibo.value.mes_correspondiente = fechaFormateada;
         console.log(recibo.value);
-        const response = await fetchActualizarRecibo(recibo.value.id, recibo.value);
+        const response = await fetchActualizarRecibo(recibo.value.id, recibo.value ,token);
         console.log(response);
         if (response.status === 200) {
             toast.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo actualizado correctamente.', life: 5000 });
@@ -271,7 +273,7 @@ async function actualizaRecibo() {
 async function loadRecibosEndeudados() {
     try {
         console.log('Codigo de propiedad:', recibo.value.codigo_propiedad);
-        const response = await fetchRecibosEndeudados(recibo.value.codigo_propiedad);
+        const response = await fetchRecibosEndeudados(recibo.value.codigo_propiedad , token);
         if (response) {
             preavisoEndeudados.value = response;
             console.log(preavisoEndeudados.value);
@@ -291,7 +293,7 @@ async function registrarPago(){
 
     for (const id of ids) {
         try {
-            const response = await fetchActualizarEstadoRecibo(id);
+            const response = await fetchActualizarEstadoRecibo(id, token);
             if(!response.status === 200){
                 throw new Error('No se pudo actualizar el estado del recibo.');
             }
@@ -496,8 +498,21 @@ async function registrarPago(){
             <div v-if="!switchValor" class="flex flex-col gap-6">
                 <div>
                     <label for="nombre" class="block font-bold mb-3">Nombre del socio: </label>
-                    <Listbox v-model="socio" :options="sociosListaBox" optionLabel="name" :filter="true" />
-                    <Message severity="secondary" v-if="socio">Socio seleccionado: {{ socio.name }}</Message>
+                    <Select v-model="socio" :options="sociosListaBox" filter optionLabel="name" placeholder="Selecciona el nombre del socio" class="w-full" :invalid="socio === null" fluid>
+                        <template #value="slotProps">
+                            <div v-if="slotProps.value" class="flex items-center">
+                                <div>{{ slotProps.value.name }}</div>
+                            </div>
+                            <span v-else>
+                                {{ slotProps.placeholder }}
+                            </span>
+                        </template>
+                        <template #option="slotProps">
+                            <div class="flex items-center">
+                                <div>{{ slotProps.option.name }}</div>
+                            </div>
+                        </template>
+                    </Select>
                     <small v-if="submitted && !socio" class="text-red-500">El campo es requerido.</small>
                 </div>
 

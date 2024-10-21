@@ -4,6 +4,7 @@ import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { onBeforeMount, watch, ref } from 'vue';
 
+const token = localStorage.getItem('authToken');
 const multas = ref();
 const multa = ref({});
 const socio = ref({});
@@ -72,7 +73,7 @@ function getEstadoLabel(status) {
 
 //Funciones para la carga de datos de multas
 const loadMultas = async () => {
-    const listaMultas = await fetchListaMultas();
+    const listaMultas = await fetchListaMultas(token);
     if (listaMultas) {
         multas.value = listaMultas;
     } else {
@@ -93,7 +94,6 @@ watch(socio, (newSocio) => {
  */
 //apertura del modal
 function registrarNuevaMulta() {
-    product.value = {};
     submitted.value = false;
     actualizacionMulta.value = false;
     modalRegistroMulta.value = true;
@@ -108,6 +108,8 @@ function hideDialog() {
 function cerrarModal() {
     modalRegistroMultaSocio.value = false;
     submitted.value = false;
+    socio.value = null;
+    multa.value = null;
 }
 
 function registrarMultaSocio() {
@@ -117,7 +119,7 @@ function registrarMultaSocio() {
 }
 
 async function listaPropiedades(id_socio){
-    const listaPropiedades = await fetchListaPropiedades(id_socio);
+    const listaPropiedades = await fetchListaPropiedades(id_socio , token);
     if (listaPropiedades) {
         propiedadesValues.value = listaPropiedades.map((item) => ({
             name: item.descripcion_propiedad,
@@ -129,7 +131,7 @@ async function listaPropiedades(id_socio){
 }
 
 async function asignarSocios() {
-    const listaSocios = await fetchListaSocios();
+    const listaSocios = await fetchListaSocios(token);
     if (listaSocios) {
         sociosListaBox.value = listaSocios.map((item) => ({
             name: item.nombre_socio + ' ' + item.primer_apellido_socio + ' ' + item.segundo_apellido_socio,
@@ -141,7 +143,7 @@ async function asignarSocios() {
 }
 
 async function asignarMultas(){
-    const listaMultas = await fetchListaMultas();
+    const listaMultas = await fetchListaMultas(token);
     if (listaMultas) {
         multasListaBox.value = listaMultas.map((item) => ({
             criterio_infraccion: item.criterio_infraccion,
@@ -161,12 +163,13 @@ async function registrarMulta() {
             await actualizarMulta();
             return;
         }
-        const response = await fetchRegistrarMulta(multa.value);
+        const response = await fetchRegistrarMulta(multa.value , token);
         console.log(response);
         if (response.status != 200) {
             throw new Error(`Error en la solicitud mensaje.`);
         }
         hideDialog();
+        loadMultas();
     } catch (error) {
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
@@ -197,7 +200,7 @@ function editarMulta(data) {
 async function actualizarMulta() {
     try {
         submitted.value = true;
-        const response = await fetchActualizacionMulta(idMulta , multa.value);
+        const response = await fetchActualizacionMulta(idMulta , multa.value , token);
         if (response.status != 200) {
             throw new Error(`Error en la solicitud, mensaje: ${response.message}`);
         }
@@ -219,7 +222,7 @@ async function registrarMultaPropiedadSocio() {
             id_multa: multa.value.code,
             id_propiedad: propiedad.value.code
         }
-        const respuesta = await fetchGuardarMulta(data);
+        const respuesta = await fetchGuardarMulta(data , token);
         if(respuesta.status !== 200){
             throw new Error('Error al intentar registrar la multa al propietario');
         }
@@ -323,15 +326,41 @@ async function registrarMultaPropiedadSocio() {
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="criterio_infraccion" class="block font-bold mb-3">Lista de socios : </label>
-                    <Listbox v-model="socio" :options="sociosListaBox" optionLabel="name" :filter="true" />
-                    <small v-if="submitted && !multa.criterio_infraccion" class="text-red-500">El socio es requerido.</small>
-                    <Message severity="secondary" v-if="socio">Socio seleccionado: {{ socio.name }}</Message>
+                    <Select v-model="socio" :options="sociosListaBox" filter optionLabel="name" placeholder="Selecciona el nombre del socio" class="w-full" :invalid="socio === null" fluid>
+                        <template #value="slotProps">
+                            <div v-if="slotProps.value" class="flex items-center">
+                                <div>{{ slotProps.value.name }}</div>
+                            </div>
+                            <span v-else>
+                                {{ slotProps.placeholder }}
+                            </span>
+                        </template>
+                        <template #option="slotProps">
+                            <div class="flex items-center">
+                                <div>{{ slotProps.option.name }}</div>
+                            </div>
+                        </template>
+                    </Select>
+                    <small v-if="submitted && !socio" class="text-red-500">El socio es requerido.</small>
                 </div>
                 <div>
                     <label for="description_infraccion" class="block font-bold mb-3">Lista de infracciones : </label>
-                    <Listbox v-model="multa" :options="multasListaBox" optionLabel="criterio_infraccion" :filter="true" />
+                    <Select v-model="multa" :options="multasListaBox" filter optionLabel="criterio_infraccion" placeholder="Selecciona el nombre del socio" class="w-full" :invalid="multa === null" fluid>
+                        <template #value="slotProps">
+                            <div v-if="slotProps.value" class="flex items-center">
+                                <div>{{ slotProps.value.criterio_infraccion }}</div>
+                            </div>
+                            <span v-else>
+                                {{ slotProps.placeholder }}
+                            </span>
+                        </template>
+                        <template #option="slotProps">
+                            <div class="flex items-center">
+                                <div>{{ slotProps.option.criterio_infraccion }}</div>
+                            </div>
+                        </template>
+                    </Select>
                     <small v-if="submitted && !multa.descripcion_infraccion" class="text-red-500">La infraccion es requerida.</small>
-                    <Message severity="secondary" v-if="multa">Multa seleccionada: {{ multa.criterio_infraccion }}</Message>
                 </div>
                 <div>
                     <label for="description_infraccion" class="block font-bold mb-3">Codigo de propiedad : </label>

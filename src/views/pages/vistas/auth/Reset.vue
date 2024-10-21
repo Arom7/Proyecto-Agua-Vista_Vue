@@ -1,10 +1,11 @@
 <script setup>
 import Password from 'primevue/password';
 import { ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { fetchReseteoPassword } from '@/service/PeticionesApiPost';
 
 const route = useRoute();
+const router = useRouter();
 const token = ref(route.query.token);
 const email = ref(route.query.email);
 const password = ref('');
@@ -12,10 +13,6 @@ const password_confirmation = ref('');
 const isSubmitting = ref(false);
 
 async function modificarContrasenia() {
-    console.log('Token: ', token.value);
-    console.log('Email: ', email.value);
-    console.log('Password   : ', password.value);
-    console.log('Password Confirmation: ', password_confirmation.value);
     isSubmitting.value = true;
     try {
         const response = await fetchReseteoPassword({ token: token.value, email: email.value, password: password.value, password_confirmation: password_confirmation.value });

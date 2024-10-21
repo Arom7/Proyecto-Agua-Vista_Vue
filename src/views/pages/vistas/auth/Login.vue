@@ -32,12 +32,9 @@ async function enviarSesion() {
     try {
         const response = await fetchAccesoSocios(data);
         if (response.status === true) {
-            console.log('Iniciando sesion...');
-            localStorage.setItem('token', response.token);
-            console.log('Verificar : ' , store.getters.isAuthenticated);
-            console.log('Token : ' , response.token);
+            localStorage.setItem('authToken', response.token);
+            console.log("Token de sesion : ",localStorage.getItem('authToken'));
             store.commit('SET_TOKEN', response.token);
-            console.log('Vuex almacena token: ', store.state.token);
             toast.add({ severity: 'success', summary: 'Iniciando sesion...', detail: response.message, life:3000 });
             await router.push('/dashboard');
         } else {

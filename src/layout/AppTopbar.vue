@@ -5,8 +5,9 @@ import AppConfigurator from './AppConfigurator.vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { fetchLogout } from '@/service/reportesApi';
-const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
 
+const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
+const token = localStorage.getItem('authToken');
 const store = useStore();
 const router = useRouter();
 const items = ref([
@@ -34,8 +35,8 @@ const items = ref([
 ]);
 
 const logout = async () => {
-    console.log('Token : ', store.state.token);
-    await fetchLogout(store.state.token);
+    console.log('Token : ', token);
+    await fetchLogout(token);
     store.commit('SET_TOKEN', null);
     router.push('/auth/login');
 };

@@ -5,7 +5,7 @@ const url = 'http://127.0.0.1:8000/api';
  * Peticion GET para obtener la lista de socios con sus respectivas propiedades.
  * @returns {Promise<Array>}
  */
-export async function fetchListaSociosPropiedadesUsuarios() {
+export async function fetchListaSociosPropiedadesUsuarios(token) {
     try {
         const response = await fetch(`${url}/propiedades/socios`, {
             headers: {
@@ -29,7 +29,7 @@ export async function fetchListaSociosPropiedadesUsuarios() {
  *  @returns {Promise<Array>}
  */
 
-export async function fetchListaSocios() {
+export async function fetchListaSocios(token) {
     try {
         const response = await fetch(`${url}/socios`, {
             headers: {
@@ -52,7 +52,7 @@ export async function fetchListaSocios() {
  * @returns {Promise<Array>}
  */
 
-export async function fetchListaRecibos() {
+export async function fetchListaRecibos(token) {
     try {
         const response = await fetch(`${url}/recibos`, {
             headers: {
@@ -74,11 +74,11 @@ export async function fetchListaRecibos() {
  * @returns {Promise<Array>}
  */
 
-export async function fetchListaMultas() {
+export async function fetchListaMultas(token) {
     try {
         const response = await fetch(`${url}/multas`, {
             headers: {
-                //Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -96,7 +96,7 @@ export async function fetchListaMultas() {
  * Petición GET para obtener la lista de propiedades de un socio.
  * @returns {Promise<Array>}
  */
-export async function fetchListaPropiedades(socioId) {
+export async function fetchListaPropiedades(socioId ,token) {
     try {
         const response = await fetch(`${url}/propiedades/socio/${socioId}`, {
             headers: {
@@ -119,7 +119,7 @@ export async function fetchListaPropiedades(socioId) {
  * @returns {Promise<Array>}
  */
 
-export async function fetchGuardarMulta(datos) {
+export async function fetchGuardarMulta(datos , token) {
     try {
         const data = {
             propiedad_id: datos.id_propiedad,
@@ -151,7 +151,7 @@ export async function fetchGuardarMulta(datos) {
  * @returns {Promise<Array>}
  */
 
-export async function fetchRegistrarMulta(data) {
+export async function fetchRegistrarMulta(data , token) {
     try {
         const response = await fetch(`${url}/multas`, {
             method: 'POST',
@@ -177,13 +177,13 @@ export async function fetchRegistrarMulta(data) {
  * @returns {Promise<Array>}
  */
 
-export async function fetchActualizacionMulta(idMulta, multa) {
+export async function fetchActualizacionMulta(idMulta, multa , token) {
     try {
         const response = await fetch(`${url}/multas/${idMulta}`, {
             method: 'PUT',
             body: JSON.stringify(multa),
             headers: {
-                //Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
                 'Content-type': 'application/json;'
             }
         });
@@ -198,7 +198,7 @@ export async function fetchActualizacionMulta(idMulta, multa) {
     }
 }
 
-export async function fetchBusquedaPropiedadSocio(id_medidor) {
+export async function fetchBusquedaPropiedadSocio(id_medidor ,token) {
     try {
         const response = await fetch(`${url}/busqueda-medidor/propiedades/${id_medidor}`, {
             headers: {
@@ -234,11 +234,11 @@ export async function fetchListaMantenimientos(token) {
     }
 }
 
-export async function fetchRecibosEndeudados(id) {
+export async function fetchRecibosEndeudados(id , token) {
     try {
         const response = await fetch(`${url}/endeudados/recibos/${id.codigo_propiedad}`, {
             headers: {
-                //'Authorization' : `Bearer ${token}`
+                'Authorization' : `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -252,11 +252,11 @@ export async function fetchRecibosEndeudados(id) {
     }
 }
 
-export async function fetchSolicitudCantidadSocios() {
+export async function fetchSolicitudCantidadSocios(token) {
     try {
         const response = await fetch(`${url}/cantidad/socios`, {
             headers: {
-                //'Authorization' : `Bearer ${token}`
+                'Authorization' : `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -270,11 +270,11 @@ export async function fetchSolicitudCantidadSocios() {
     }
 }
 
-export async function fetchSolicitudCantidadPropiedades() {
+export async function fetchSolicitudCantidadPropiedades(token) {
     try {
         const response = await fetch(`${url}/cantidad/propiedades`, {
             headers: {
-                //'Authorization' : `Bearer ${token}`
+                'Authorization' : `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -288,11 +288,11 @@ export async function fetchSolicitudCantidadPropiedades() {
     }
 }
 
-export async function fetchSolicitudCantidadPreAvisosPagados() {
+export async function fetchSolicitudCantidadPreAvisosPagados(token) {
     try {
         const response = await fetch(`${url}/cantidad/recibos/pagados`, {
             headers: {
-                //'Authorization' : `Bearer ${token}`
+                'Authorization' : `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -306,11 +306,11 @@ export async function fetchSolicitudCantidadPreAvisosPagados() {
     }
 }
 
-export async function fetchSolicitudCantidadPreAvisosEndeudados() {
+export async function fetchSolicitudCantidadPreAvisosEndeudados(token) {
     try {
         const response = await fetch(`${url}/cantidad/recibos/pendientes`, {
             headers: {
-                //'Authorization' : `Bearer ${token}`
+                'Authorization' : `Bearer ${token}`
             }
         });
         if (!response.ok) {

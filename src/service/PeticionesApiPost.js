@@ -4,15 +4,19 @@ const url = 'http://127.0.0.1:8000/api';
  * Petición POST para registrar un nuevo socio.
  * @returns {Promise<Array>}
  */
-export async function fetchRegistrarNuevoSocio(data) {
+export async function fetchRegistrarNuevoSocio(data,token) {
     try {
-        const response = await fetch(`${url}/registrar-socios`, {
+        console.log(data);
+        console.log(token);
+        const response = await fetch(`${url}/registro/socio`, {
             method: 'POST',
             body: JSON.stringify(data),
             headers: {
-                'Content-type': 'application/json;'
+                Authorization: `Bearer ${token}`,
+                'Content-type': 'application/json;',
             }
         });
+        console.log(response);
         if (!response.ok) {
             const problema = await response.json();
             throw new Error(`${problema.message}`);
@@ -50,13 +54,14 @@ export async function fetchAccesoSocios(data) {
     }
 }
 
-export async function fetchRegistrarNuevoRecibo(data) {
+export async function fetchRegistrarNuevoRecibo(data,token) {
     try {
         const response = await fetch(`${url}/recibos`, {
             method: 'POST',
             body: JSON.stringify(data),
             headers: {
-                'Content-type': 'application/json;'
+                'Content-type': 'application/json;',
+                Authorization: `Bearer ${token}`
             }
         });
         if (!response.ok) {
