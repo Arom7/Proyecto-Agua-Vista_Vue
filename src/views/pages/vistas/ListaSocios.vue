@@ -26,6 +26,7 @@ const loadSocios = async () => {
     if (listaSocios) {
         socios.value = listaSocios;
         console.log(token);
+        console.log(listaSocios);
     } else {
         console.error('No se pudo obtener la lista de socios.');
     }
@@ -197,10 +198,10 @@ async function registrarNuevaPropiedad() {
         }
         cerrarModalRegistroPropiedad();
         await loadSocios();
-        toast.add({ severity: 'success', summary: 'La propiedad fue registrada', detail: 'El socio se registro correctamente.', life: 5000 });
+        toast.add({ severity: 'success', summary: 'La propiedad fue registrada', detail: 'Se registro correctamente.', life: 5000 });
     } catch (error) {
         cerrarModalRegistroPropiedad();
-        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar el socio', detail: error.message , life: 3000 });
+        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar la propiedad', detail: error.message , life: 3000 });
         console.error('Se produjo un error:', error.message);
     }
 }
@@ -265,7 +266,17 @@ function cerrarModalRegistroPropiedad() {
                 </template>
             </Toolbar>
 
-            <DataTable :value="socios" rowGroupMode="subheader" groupRowsBy="nombre_socio" sortMode="single" sortField="nombre_socio" :sortOrder="1" scrollable scrollHeight="590px" tableStyle="min-width: 50rem">
+            <DataTable
+            :value="socios"
+            rowGroupMode="subheader"
+            groupRowsBy="ci_socio"
+            sortMode="single"
+            sortField="nombre_socio"
+            :sortOrder="1"
+            scrollable
+            scrollHeight="590px"
+            tableStyle="min-width: 50rem"
+            >
                 <!-- Group header for each socio -->
                 <template #groupheader="slotProps">
                     <div class="p-2 flex items-center gap-2 mb-1">
@@ -310,7 +321,7 @@ function cerrarModalRegistroPropiedad() {
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="modalRegistroNuevoSocio" :style="{ width: '500px' }" header="Asignar una nueva propiedad" :modal="true">
+        <Dialog v-model:visible="modalRegistroNuevoSocio" :style="{ width: '500px' }" header="Registrar un nuevo socios." :modal="true">
             <div class="flex flex-col gap-6">
                 <div class="flex">
                     <div>
@@ -365,7 +376,7 @@ function cerrarModalRegistroPropiedad() {
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="modalRegistroNuevaPropiedad" :style="{ width: '450px' }" header="Asignar una multa a un propietario" :modal="true">
+        <Dialog v-model:visible="modalRegistroNuevaPropiedad" :style="{ width: '450px' }" header="Registrar una nueva propiedad" :modal="true">
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="nombre" class="block font-bold mb-3">Nombre del socio: </label>

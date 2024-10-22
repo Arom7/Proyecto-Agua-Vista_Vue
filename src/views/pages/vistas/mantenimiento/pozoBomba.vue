@@ -7,6 +7,7 @@ import { fetchRegistrarNuevoMantenimiento } from '@/service/PeticionesApiPost';
 import { fetchActualizarMantenimiento } from '@/service/PeticionesApiPut';
 import {useStore} from 'vuex';
 
+const token = localStorage.getItem('authToken');
 const store = useStore();
 const toast = useToast();
 const dt = ref();
@@ -29,7 +30,7 @@ const tipoMantenimiento = ref([
 const minDate = new Date();
 
 const loadMantenimietos = async () => {
-    const listaMantenimientos = await fetchListaMantenimientos(store.state.token);
+    const listaMantenimientos = await fetchListaMantenimientos(token);
     if (listaMantenimientos) {
         mantenimientos.value = listaMantenimientos;
         console.log(mantenimientos.value);
@@ -80,7 +81,7 @@ async function guardarMantenimiento() {
 
     //manejo actualizacion
     if(idMantenimiento){
-        const respuesta = await fetchActualizarMantenimiento(idMantenimiento, mantenimiento.value,store.state.token);
+        const respuesta = await fetchActualizarMantenimiento(idMantenimiento, mantenimiento.value, token);
         if (respuesta.status) {
             toast.add({ severity: 'success', summary: 'Exito', detail: 'Datos del mantenimiento actualizados correctamente.', life: 5000 });
             modalRegistroMantenimiento.value = false;
@@ -93,7 +94,7 @@ async function guardarMantenimiento() {
     }
 
     //manejo de registro
-    const response = await fetchRegistrarNuevoMantenimiento(mantenimiento.value, store.state.token);
+    const response = await fetchRegistrarNuevoMantenimiento(mantenimiento.value, token);
     if (response.status) {
         toast.add({ severity: 'success', summary: 'Exito', detail: 'Datos del mantenimiento guardados correctamente.', life: 5000 });
         modalRegistroMantenimiento.value = false;
@@ -118,7 +119,7 @@ async function editarMantenimiento(data) {
         <div class="card">
             <Toolbar class="mb-6">
                 <template #start>
-                    <Button label="Registrar nuevo mantenimiento" icon="pi pi-plus" class="mr-2" @click="openNew" />
+                    <Button label="Registrar nuevo mantenimiento" icon="pi pi-plus" class="mr-2" @click="openNew" outlined/>
                 </template>
 
                 <template #end>

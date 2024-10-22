@@ -33,8 +33,10 @@ async function enviarSesion() {
         const response = await fetchAccesoSocios(data);
         if (response.status === true) {
             localStorage.setItem('authToken', response.token);
-            console.log("Token de sesion : ",localStorage.getItem('authToken'));
+            localStorage.setItem('roles', JSON.stringify(response.roles));
+            console.log("Roles : ",localStorage.getItem('roles'));
             store.commit('SET_TOKEN', response.token);
+
             toast.add({ severity: 'success', summary: 'Iniciando sesion...', detail: response.message, life:3000 });
             await router.push('/dashboard');
         } else {

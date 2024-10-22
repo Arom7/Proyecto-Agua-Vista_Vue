@@ -56,10 +56,10 @@ function getEstadoLabel(status) {
                 <div class="font-semibold text-xl my-6"><Message severity="success">Selecciones el rango de fechas para la busqueda de deudas.</Message></div>
                 <div class="flex flex-col md:flex-row gap-4">
                     <div class="font-semibold text-xm my-2">Fecha inicial :</div>
-                    <DatePicker id="fechaInicio" class="w-72 mb-1" v-model="fechaInicio" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd" :manualInput="false"></DatePicker>
+                    <DatePicker id="fechaInicio" class="mb-1" v-model="fechaInicio" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd" :manualInput="false"></DatePicker>
 
                     <div class="font-semibold text-xm my-2">Fecha final :</div>
-                    <DatePicker id="fechaFin" class="w-72 mb-1" v-model="fechaFin" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd" :manualInput="false"></DatePicker>
+                    <DatePicker id="fechaFin" class="mb-1" v-model="fechaFin" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd" :manualInput="false"></DatePicker>
 
                     <Button type="button" class="mr-3 mb-1" label="Search" icon="pi pi-search" iconPos="right" :loading="loading" @click="load()" />
                 </div>

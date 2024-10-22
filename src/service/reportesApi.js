@@ -52,7 +52,8 @@ export async function fetchLogout(token) {
         if (!response.ok) {
             throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
         }
-        localStorage.removeItem('token');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('roles');
         return await response.json();
     } catch (error) {
         console.error('Se produjo un error:', error.message);

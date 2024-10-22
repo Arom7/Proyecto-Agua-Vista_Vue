@@ -3,6 +3,7 @@ import Landing from '@/views/pages/Landing.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '@/store';
 
+const token = localStorage.getItem('authToken');
 const router = createRouter({
     history: createWebHistory(),
     routes: [
@@ -10,14 +11,16 @@ const router = createRouter({
             path: '/',
             name: 'landing',
             component: Landing
-        },{
+        },
+        {
             path: '/layout',
             component: AppLayout,
             children: [
                 {
                     path: '/dashboard',
                     name: 'dashboard',
-                    component: () => import('@/views/Dashboard.vue')
+                    component: () => import('@/views/Dashboard.vue'),
+                    meta: { requiresAuth: true, roles: ['lecturador', 'administrador'] }
                 },
                 {
                     path: '/uikit/formlayout',
@@ -109,35 +112,43 @@ const router = createRouter({
                     path: '/documentation',
                     name: 'documentation',
                     component: () => import('@/views/pages/Documentation.vue')
-                },{
+                },
+                {
                     path: '/listaSocios',
                     name: 'listaDeSocios',
-                    component: () => import('@/views/pages/vistas/ListaSocios.vue')
+                    component: () => import('@/views/pages/vistas/ListaSocios.vue'),
+                    meta: { requiresAuth: true, roles: ['lecturador', 'administrador'] }
                 },
                 {
                     path: '/lecturaRecibos',
                     name: 'crudRecibos',
-                    component: () => import('@/views/pages/vistas/CrudRecibos.vue')
+                    component: () => import('@/views/pages/vistas/CrudRecibos.vue'),
+                    meta: { requiresAuth: true, roles: ['lecturador', 'administrador'] }
                 },
                 {
-                    path:'/multas',
+                    path: '/multas',
                     name: 'crudMultas',
-                    component : () => import('@/views/pages/vistas/CrudMultas.vue')
+                    component: () => import('@/views/pages/vistas/CrudMultas.vue'),
+                    meta: { requiresAuth: true, roles: ['administrador'] }
                 },
                 {
                     path: '/reportes/deudas',
                     name: 'reporteDeudas',
-                    component: () => import('@/views/pages/vistas/ReporteDeudas.vue')
-                },{
+                    component: () => import('@/views/pages/vistas/ReporteDeudas.vue'),
+                    meta: { requiresAuth: true, roles: ['administrador'] }
+                },
+                {
                     path: '/reportes/pagos',
                     name: 'reportePagos',
-                    component: () => import('@/views/pages/vistas/ReportePagos.vue')
-                },{
+                    component: () => import('@/views/pages/vistas/ReportePagos.vue'),
+                    meta: { requiresAuth: true, roles: ['administrador'] }
+                },
+                {
                     path: '/BombaDeAgua/PozoAgua',
                     name: 'BombadeAgua',
-                    component: () => import('@/views/pages/vistas/mantenimiento/PozoBomba.vue')
+                    component: () => import('@/views/pages/vistas/mantenimiento/PozoBomba.vue'),
+                    meta: { requiresAuth: true, roles: ['administrador'] }
                 }
-
             ]
         },
         {
@@ -169,19 +180,28 @@ const router = createRouter({
             path: '/auth/error',
             name: 'error',
             component: () => import('@/views/pages/auth/Error.vue')
-        },
+        }
     ]
 });
 
-/*
 router.beforeEach((to, from, next) => {
-    console.log('token: ', store.getters.isAuthenticated);
-    if (to.name !== 'login' && to.name !== 'landing' && !store.getters.isAuthenticated){
-        next({ name: 'login' });
+    const userRoles = JSON.parse(localStorage.getItem('roles')) || [];
+    console.log(token);
+    if (to.matched.some((record) => record.meta.requiresAuth)) {
+        if (to.name !== 'login' && to.name !== 'landing' && to.name !== 'reseteoEmail' && to.name !== 'reseteoContraseña' && !token) {
+            next({ name: 'login' });
+        } else {
+            const routeRoles = to.meta.roles;
+            const hasAccess = routeRoles.some((role) => userRoles.includes(role));
+            if (hasAccess) {
+                next();
+            } else {
+                next({ name: 'Dashboard' }); // Redirigir a una página de acceso denegado o dashboard
+            }
+        }
     } else {
         next();
     }
 });
-*/
 
 export default router;

@@ -90,7 +90,7 @@ const galleriaResponsiveOptions = ref([
             <div
                 id="hero"
                 class="flex flex-col pt-6 px-6 lg:px-20 overflow-hidden"
-                style="background: linear-gradient(0deg, rgba(0,225,163, 0.2), rgba(0,195,223, 0.2)), radial-gradient(77.36% 256.97% at 77.36% 57.52%, rgb(0,225,163) 0%, rgb(0,208,225) 100%); clip-path: ellipse(120% 85% at 95% 9%)"
+                style="background: linear-gradient(0deg, rgba(0,225,163, 0.2), rgba(0,195,223, 0.2)), radial-gradient(77.36% 256.97% at 77.36% 57.52%, rgb(0,225,163) 0%, rgb(0,208,225) 100%); clip-path: ellipse(150% 95% at 80% 0%)"
             >
                 <div class="mx-6 md:mx-20 mt-0 md:mt-6">
                     <h1 class="text-6xl font-bold text-gray-900 leading-tight"><span class="font-light block">OTB Campiña II</span>Barrio Magisterio</h1>
@@ -98,11 +98,11 @@ const galleriaResponsiveOptions = ref([
                     <p class="font-normal text-2xl leading-normal md:mt-4 text-gray-700">Cochabamba - Bolivia</p>
                 </div>
                 <div class="flex justify-center md:justify-end w-full">
-                    <img src="/ImagenesOTB/entradaOTB.png" alt="Imagen-entrada-OTB" class="md:w-auto rounded-t-lg" />
+                    <img src="/ImagenesOTB/entradaOTB.png" alt="Imagen-entrada-OTB" class="md:w-auto rounded-t-lg shadow-lg" style="clip-path: ellipse(120% 95% at 50% 0%);"/>
                 </div>
             </div>
 
-            <div id="highlights" class="py-6 px-6 lg:px-20 mx-0 my-12 lg:mx-20">
+            <div id="highlights" class="py-6 px-6 lg:px-20 mx-0 lg:mx-20">
                 <div class="text-center">
                     <div class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-4xl">Objetivos de la OTB</div>
                     <div class="mt-5">
@@ -273,5 +273,9 @@ const galleriaResponsiveOptions = ref([
     .iframe-small {
         display: block; /* show */
     }
+}
+
+.shadow-lg {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 </style>
