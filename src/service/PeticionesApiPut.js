@@ -58,3 +58,32 @@ export async function fetchActualizarEstadoRecibo(id ,token) {
         throw error;
     }
 }
+
+export async function fetchRegistrarCambioPropiedad(data,token){
+    try{
+        let datos = {
+            nuevo_propietario_id : data.socio_compra
+        }
+        let id_propiedad = data.propiedad;
+        console.log(datos);
+        console.log(id_propiedad);
+
+        const response = await fetch(`${url}/actualizar/propietario/${id_propiedad}`, {
+            method: 'PATCH',
+            body: JSON.stringify(datos),
+            headers: {
+                'Content-type': 'application/json;',
+                //Authorization: `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        console.log(response);
+        return await response.json();
+
+    }catch(error){
+        console.error('Se produjo un error:', error.message);
+        throw error;
+    }
+}

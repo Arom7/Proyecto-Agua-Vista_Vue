@@ -9,8 +9,8 @@ const toast = useToast();
 const loading = ref(false);
 const sociosRecibos = ref([]);
 const now = new Date();
-const fechaInicio = ref(new Date(now.getFullYear(), now.getMonth() - 1, 1));
-const fechaFin = ref(new Date(now.getFullYear(), now.getMonth(), 0));
+const fechaInicio = ref(new Date(now.getFullYear(), now.getMonth(), 1));
+const fechaFin = ref(new Date(now.getFullYear(), now.getMonth() + 1, 0));
 
 // varaible de busqueda
 const filters = ref({
@@ -84,8 +84,7 @@ function getEstadoLabel(status) {
         >
             <template #header>
                 <div class="flex flex-wrap gap-2 items-center justify-between">
-
-                    <h4 class="m-0 font-bold"> <i class="pi pi-home"></i> Lista de socios y sus propiedades</h4>
+                    <h4 class="m-0 font-bold"><i class="pi pi-home"></i> Lista de socios y sus propiedades</h4>
                     <IconField>
                         <InputIcon>
                             <i class="pi pi-search" />
@@ -120,15 +119,19 @@ function getEstadoLabel(status) {
                                 >
                             </div>
                             <div v-if="propiedad.recibos && propiedad.recibos.length">
-                                <div class="recibo-header mb-2">
-                                    <div># de Recibo</div>
-                                    <div>Total de recibo</div>
-                                    <div>Estado de pago</div>
+                                <div class="recibo-header my-2">
+                                    <div class="flex-1"># de Recibo</div>
+                                    <div class="flex-1">Total de recibo</div>
+                                    <div class="flex-1">Por el mes:</div>
+                                    <div class="flex-1">Cubos Cubicos:</div>
+                                    <div class="flex-1">Estado de pago</div>
                                 </div>
                                 <div v-for="(recibo, reciboIndex) in propiedad.recibos" :key="reciboIndex" class="recibo-item mb-2">
-                                    <div>{{ recibo.id }}</div>
-                                    <div>{{ recibo.total }}</div>
-                                    <div>
+                                    <div class="flex-1">{{ recibo.id }}</div>
+                                    <div class="flex-1">{{ recibo.total }}</div>
+                                    <div class="flex-1">{{ recibo.mes }}</div>
+                                    <div class="flex-1">{{ recibo.consumo }}</div>
+                                    <div class="flex-1">
                                         <Tag :value="recibo.estado_pago == 1 ? 'Pagado' : 'Endeudado'" :severity="getEstadoLabel(recibo.estado_pago)" />
                                     </div>
                                 </div>
@@ -148,13 +151,17 @@ function getEstadoLabel(status) {
 </template>
 
 <style scoped>
-.recibo-header,
-.recibo-item {
-    display: flex;
-    justify-content: space-between;
+.recibo-header, .recibo-item {
+  display: flex;
+  justify-content: space-between;
 }
 
-.recibo-header {
-    font-weight: bold;
+.recibo-header > div, .recibo-item > div {
+  flex: 1;
+  margin-right: 10px; /* Ajusta el margen según sea necesario */
+}
+
+.recibo-header > div:last-child, .recibo-item > div:last-child {
+  margin-right: 0; /* Elimina el margen derecho del último elemento */
 }
 </style>

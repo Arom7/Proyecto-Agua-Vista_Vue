@@ -16,7 +16,8 @@ const model = ref([
         items: [
             { label: 'Lista de socios', icon: 'pi pi-fw pi-id-card', to: '/listaSocios' },
             { label: 'Lecturacion de recibos', icon: 'pi pi-fw pi-align-justify', to: '/lecturaRecibos' },
-            { label: 'Multas', icon: 'pi pi-fw pi-dollar', to: '/multas' }
+            { label: 'Multas', icon: 'pi pi-fw pi-dollar', to: '/multas' },
+            { label: 'Lista de mantemiento', icon: 'pi pi-spin pi-cog', to: '/BombaDeAgua/PozoAgua' }
         ]
     },
     {
@@ -26,11 +27,6 @@ const model = ref([
             { label: 'Reporte de pagos', icon: 'pi pi-fw pi-file-pdf', to: '/reportes/pagos' },
             { label: 'Reporte de deudas', icon: 'pi pi-fw pi-file-pdf', to: '/reportes/deudas' }
         ]
-    },
-    {
-        label: 'Mantenimiento',
-        icon: 'pi pi-wrench',
-        items: [{ label: 'Bomba - Pozo de agua', icon: 'pi pi-spin pi-cog', to: '/BombaDeAgua/PozoAgua' }]
     }
 ]);
 </script>

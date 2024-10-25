@@ -1,5 +1,5 @@
 <script setup>
-import { fetchListaMultas, fetchListaSocios, fetchListaPropiedades, fetchGuardarMulta, fetchRegistrarMulta, fetchActualizacionMulta} from '@/service/peticionesApi';
+import { fetchListaMultas, fetchListaSocios, fetchListaPropiedades, fetchGuardarMulta, fetchRegistrarMulta, fetchActualizacionMulta, fetchListaMultasActivas } from '@/service/peticionesApi';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { onBeforeMount, watch, ref } from 'vue';
@@ -24,7 +24,6 @@ const toast = useToast();
 const dt = ref();
 const products = ref();
 
-
 const deleteProductsDialog = ref(false);
 const product = ref({});
 const filters = ref({
@@ -32,12 +31,10 @@ const filters = ref({
 });
 const submitted = ref(false);
 
-
 function formatCurrency(value) {
-    if (value) return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    if (value) return value.toLocaleString('en-US', { style: 'currency', currency: 'BOB' });
     return;
 }
-
 
 function eliminarMulta(datos) {
     console.log(datos);
@@ -60,7 +57,7 @@ function confirmDeleteSelected() {
 
 function getEstadoLabel(status) {
     switch (status) {
-        case 1 :
+        case 1:
             return 'success';
 
         case 0:
@@ -118,8 +115,27 @@ function registrarMultaSocio() {
     modalRegistroMultaSocio.value = true;
 }
 
-async function listaPropiedades(id_socio){
-    const listaPropiedades = await fetchListaPropiedades(id_socio , token);
+function validarValoresMulta() {
+    const errores = [];
+    const reglasTexto = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9.,\-]+([ ]+[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9.,\-]+)*$/;
+    if (!multa.value.criterio_infraccion) {
+        errores.push('La infraccion no puede ser nula.');
+    } else if (!reglasTexto.test(multa.value.criterio_infraccion)) {
+        errores.push('Solo se aceptan caracteres alfanumericos en el titulo de la infraccion.');
+    }
+    if (!multa.value.descripcion_infraccion) {
+        errores.push('La descripcion de la infraccion es requerido.');
+    } else if (!reglasTexto.test(multa.value.descripcion_infraccion)) {
+        errores.push('Solo se aceptan caracteres alfanumericos en la descripcion.');
+    }
+    if (!multa.value.monto_infraccion) {
+        errores.push('El monto de la infraccion es obligatorio.');
+    }
+    return errores;
+}
+
+async function listaPropiedades(id_socio) {
+    const listaPropiedades = await fetchListaPropiedades(id_socio, token);
     if (listaPropiedades) {
         propiedadesValues.value = listaPropiedades.map((item) => ({
             name: item.descripcion_propiedad,
@@ -142,8 +158,8 @@ async function asignarSocios() {
     }
 }
 
-async function asignarMultas(){
-    const listaMultas = await fetchListaMultas(token);
+async function asignarMultas() {
+    const listaMultas = await fetchListaMultasActivas(token);
     if (listaMultas) {
         multasListaBox.value = listaMultas.map((item) => ({
             criterio_infraccion: item.criterio_infraccion,
@@ -156,21 +172,28 @@ async function asignarMultas(){
 
 //Metodo post para registrar la multa
 async function registrarMulta() {
+    const errores = validarValoresMulta();
+    if (errores.length > 0) {
+        toast.add({ severity: 'error', summary: 'Error en la validacion, campos requeridos', detail: errores.join(' '), life: 7000 });
+        return;
+    }
     try {
         submitted.value = true;
         multa.value.id = null;
-        if(actualizacionMulta.value){
+        if (actualizacionMulta.value) {
             await actualizarMulta();
             return;
         }
-        const response = await fetchRegistrarMulta(multa.value , token);
+        const response = await fetchRegistrarMulta(multa.value, token);
         console.log(response);
         if (response.status != 200) {
             throw new Error(`Error en la solicitud mensaje.`);
         }
+        toast.add({ severity: 'success', summary: 'Multa registrada', detail: 'La multa se registro correctamente', life: 3000 });
         hideDialog();
         loadMultas();
     } catch (error) {
+        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar la multa', detail: error.message, life: 3000 });
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
     }
@@ -198,9 +221,14 @@ function editarMulta(data) {
 
 //Metodo put para actualizar una multa
 async function actualizarMulta() {
+    const errores = validarValoresMulta();
+    if (errores.length > 0) {
+        toast.add({ severity: 'error', summary: 'Error en la validacion, campos requeridos', detail: errores.join(' '), life: 7000 });
+        return;
+    }
     try {
         submitted.value = true;
-        const response = await fetchActualizacionMulta(idMulta , multa.value , token);
+        const response = await fetchActualizacionMulta(idMulta, multa.value, token);
         if (response.status != 200) {
             throw new Error(`Error en la solicitud, mensaje: ${response.message}`);
         }
@@ -217,21 +245,20 @@ async function actualizarMulta() {
  * Funcion para agregar una multa a una propiedad de un socio
  */
 async function registrarMultaPropiedadSocio() {
-    try{
+    try {
         const data = {
             id_multa: multa.value.code,
             id_propiedad: propiedad.value.code
-        }
-        const respuesta = await fetchGuardarMulta(data , token);
-        if(respuesta.status !== 200){
+        };
+        const respuesta = await fetchGuardarMulta(data, token);
+        if (respuesta.status !== 200) {
             throw new Error('Error al intentar registrar la multa al propietario');
         }
         cerrarModal();
-    }
-    catch (error) {
+    } catch (error) {
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
-        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar el socio' , detail: error.message , life: 3000 });
+        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar el socio', detail: error.message, life: 3000 });
     }
 }
 </script>
@@ -282,14 +309,14 @@ async function registrarMultaPropiedadSocio() {
                 </Column>
                 <Column field="inventoryStatus" header="Estado" sortable style="min-width: 12rem">
                     <template #body="slotProps">
-                        <Tag :value="slotProps.data.estado_activo == 1? 'Activo' : 'Inactivo'" :severity="getEstadoLabel(slotProps.data.estado_activo)" />
+                        <Tag :value="slotProps.data.estado_activo == 1 ? 'Activo' : 'Inactivo'" :severity="getEstadoLabel(slotProps.data.estado_activo)" />
                     </template>
                 </Column>
                 <Column :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
-                        <Button icon="pi pi-power-off" severity="info" outlined rounded @click="actualizarEstadoMulta(slotProps.data)"/>
+                        <Button icon="pi pi-power-off" severity="info" outlined rounded @click="actualizarEstadoMulta(slotProps.data)" />
                         <Button icon="pi pi-pencil" outlined rounded class="mx-2" @click="editarMulta(slotProps.data)" />
-                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="eliminarMulta(slotProps.data)" />
+
                     </template>
                 </Column>
             </DataTable>
@@ -300,25 +327,22 @@ async function registrarMultaPropiedadSocio() {
                 <div>
                     <label for="criterio_infraccion" class="block font-bold mb-3">Infraccion : </label>
                     <InputText id="criterio_infraccion" v-model.trim="multa.criterio_infraccion" required="true" autofocus :invalid="submitted && !multa.criterio_infraccion" fluid />
-                    <small v-if="submitted && !multa.criterio_infraccion" class="text-red-500">El tipo de infraccion es requerida.</small>
+                    <small v-if="submitted && !multa.criterio_infraccion" class="text-red-500">Este campos es requerido.</small>
                 </div>
                 <div>
                     <label for="description_infraccion" class="block font-bold mb-3">Description de la infraccion : </label>
                     <Textarea id="descripcion_infraccion" v-model.trim="multa.descripcion_infraccion" required="true" rows="3" cols="20" fluid />
-                    <small v-if="submitted && !multa.descripcion_infraccion" class="text-red-500">El tipo de infraccion es requerida.</small>
+                    <small v-if="submitted && !multa.descripcion_infraccion" class="text-red-500">Las razones de la multa es requerida.</small>
                 </div>
                 <div class="col-span-6">
                     <label for="monto_infraccion" class="block font-bold mb-3">Monto total de pago : </label>
                     <InputNumber id="monto_infraccion" v-model.trim="multa.monto_infraccion" fluid />
+                    <small v-if="submitted && !multa.monto_infraccion" class="text-red-500">El El monto es requerida.</small>
                 </div>
             </div>
             <template #footer>
                 <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
-                <Button
-                    label="Guardar"
-                    icon="pi pi-check"
-                    @click="registrarMulta"
-                    :disabled="!multa.criterio_infraccion || !multa.descripcion_infraccion || !multa.monto_infraccion"/>
+                <Button label="Guardar" icon="pi pi-check" @click="registrarMulta" :disabled="!multa.criterio_infraccion || !multa.descripcion_infraccion" />
             </template>
         </Dialog>
 
@@ -369,11 +393,7 @@ async function registrarMultaPropiedadSocio() {
             </div>
             <template #footer>
                 <Button label="Cancelar" icon="pi pi-times" text @click="cerrarModal" />
-                <Button
-                    label="Guardar"
-                    icon="pi pi-check"
-                    @click="registrarMultaPropiedadSocio"
-                    />
+                <Button label="Guardar" icon="pi pi-check" @click="registrarMultaPropiedadSocio" />
             </template>
         </Dialog>
 

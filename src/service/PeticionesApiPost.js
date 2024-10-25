@@ -56,6 +56,7 @@ export async function fetchAccesoSocios(data) {
 
 export async function fetchRegistrarNuevoRecibo(data,token) {
     try {
+        console.log(data);
         const response = await fetch(`${url}/recibos`, {
             method: 'POST',
             body: JSON.stringify(data),

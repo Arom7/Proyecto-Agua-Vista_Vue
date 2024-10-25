@@ -1,4 +1,4 @@
-const token = localStorage.getItem('token');
+
 const url = 'http://127.0.0.1:8000/api';
 
 /**
@@ -77,6 +77,24 @@ export async function fetchListaRecibos(token) {
 export async function fetchListaMultas(token) {
     try {
         const response = await fetch(`${url}/multas`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.multas;
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+        errorMessage.value = 'Se produjo un error al extraer los datos.';
+    }
+}
+
+export async function fetchListaMultasActivas(token) {
+    try {
+        const response = await fetch(`${url}/multas/activas`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }

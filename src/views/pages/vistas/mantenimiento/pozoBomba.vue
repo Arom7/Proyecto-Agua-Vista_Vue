@@ -64,16 +64,47 @@ const exportCSV = () => {
     dt.value.exportCSV();
 };
 
+function validarValoresMulta() {
+    const errores = [];
+    const reglasNombre = /^([a-zA-ZáéíóúÁÉÍÓÚñÑ]+\.?\s)*[a-zA-ZáéíóúÁÉÍÓÚñÑ]+$/;
+    const reglasTexto = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9.,\-]+([ ]+[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9.,\-]+)*$/;
+
+    if (!mantenimiento.value.responsable) {
+        errores.push('El nombre del responsable es requerido.');
+    }else if (!reglasNombre.test(mantenimiento.value.responsable)) {
+        errores.push('Solo se aceptan caracteres alfanumericos en el nombre del responsable');
+    }
+    if (!reglasTexto.test(mantenimiento.value.descripcion_mantenimiento)) {
+        errores.push('La descripcion de la infraccion solo acepta caracteres alfanumericos.');
+    }
+    if(!mantenimiento.value.fecha_mantenimiento_inicio){
+         errores.push('La fecha de inicio de mantenimiento es requerido.');
+    }
+    if(!mantenimiento.value.fecha_mantenimiento_fin){
+         errores.push('La fecha de fin de mantenimiento es requerido.');
+    }
+    if(!mantenimiento.value.fecha_proximo_mantenimiento){
+         errores.push('La fecha de proximo mantenimiento es requerido.');
+    }
+    if(!mantenimiento.value.precio_total){
+         errores.push('El precio total del mantenimiento es requerido.');
+    }
+    return errores;
+}
+
+
+
 /**
  * Analisis peticiones API
  */
 
 async function guardarMantenimiento() {
-    submitted.value = true;
-    if (!mantenimiento.value.responsable || !mantenimiento.value.fecha_mantenimiento_inicio || !mantenimiento.value.fecha_mantenimiento_fin || !mantenimiento.value.precio_total || !mantenimiento.value.fecha_proximo_mantenimiento) {
-        toast.add({ severity: 'error', summary: 'Error de validacion', detail: 'Todos los campos son requeridos.', life: 3000 });
+    const errores = validarValoresMulta();
+    if (errores.length > 0) {
+        toast.add({ severity: 'error', summary: 'Error en la validacion, campos requeridos', detail: errores.join(' '), life: 7000 });
         return;
     }
+    submitted.value = true;
     mantenimiento.value.tipo_equipo = mantenimiento.value.tipo_equipo.label;
     mantenimiento.value.fecha_mantenimiento_inicio = new Date(mantenimiento.value.fecha_mantenimiento_inicio).toISOString().slice(0, 10);
     mantenimiento.value.fecha_mantenimiento_fin = new Date(mantenimiento.value.fecha_mantenimiento_fin).toISOString().slice(0, 10);
@@ -193,6 +224,7 @@ async function editarMantenimiento(data) {
                             :manualInput="false"
                             dateFormat="yy-mm-dd"
                             :disabled="!mantenimiento.fecha_mantenimiento_inicio"
+                            :minDate="minDate"
                         />
                          <small v-if="!mantenimiento.fecha_mantenimiento_inicio" class="text-red-500">Campo inhabilitado.</small>
                     </div>
@@ -219,6 +251,7 @@ async function editarMantenimiento(data) {
                             :manualInput="false"
                             dateFormat="yy-mm-dd"
                             :disabled="!mantenimiento.fecha_mantenimiento_fin"
+                            :minDate="minDate"
                         />
                         <small v-if="!mantenimiento.fecha_mantenimiento_fin" class="text-red-500">Campo inhabilitado.</small>
                     </div>

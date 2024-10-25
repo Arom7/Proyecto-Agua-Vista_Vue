@@ -1,9 +1,10 @@
 <script setup>
-import { onBeforeMount, onMounted, ref } from 'vue';
+import { onBeforeMount, onMounted, ref, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { fetchListaSocios } from '@/service/peticionesApi';
-import { fetchListaSociosPropiedadesUsuarios } from '@/service/peticionesApi';
+import { fetchListaSociosPropiedadesUsuarios, fetchListaPropiedades } from '@/service/peticionesApi';
 import { fetchRegistrarNuevoSocio, fetchRegistrarNuevaPropiedad } from '@/service/PeticionesApiPost';
+import { fetchRegistrarCambioPropiedad } from '@/service/PeticionesApiPut';
 import { useStore } from 'vuex';
 
 const store = useStore();
@@ -12,21 +13,25 @@ const socio = ref(null);
 const options = ref(['list', 'grid']);
 const modalRegistroNuevoSocio = ref(false);
 const modalRegistroNuevaPropiedad = ref(false);
+const modalCambioPropiedad = ref(false);
 const sociosListaBox = ref([]);
+const socioCompra = ref(null);
+const socioVenta = ref(null);
 const propiedad = ref(null);
+const propiedadCambio = ref(null);
+const propiedadesValues = ref([]);
 const medidor = ref(null);
 const submitted = ref(false);
 const password = ref('');
 const toast = useToast();
 const switchValue = ref(false);
+const switchValor = ref(false);
 const token = localStorage.getItem('authToken');
 
 const loadSocios = async () => {
     const listaSocios = await fetchListaSociosPropiedadesUsuarios(token);
     if (listaSocios) {
         socios.value = listaSocios;
-        console.log(token);
-        console.log(listaSocios);
     } else {
         console.error('No se pudo obtener la lista de socios.');
     }
@@ -34,12 +39,18 @@ const loadSocios = async () => {
 
 onBeforeMount(loadSocios);
 
+watch(socioVenta, (newSocio) => {
+    if (newSocio) {
+        codigoPropiedad(newSocio.code);
+    }
+});
+
 /*
     Validacion de datos - Registro Socio
 */
 function validarDatosSocio() {
     const errores = [];
-    const reglasnombre = /^[a-zA-ZñÑ]+( [a-zA-ZñÑ]+)*$/;
+    const reglasnombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+( [a-zA-ZáéíóúÁÉÍÓÚñÑ]+)*$/;
     const reglasapellido = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+$/;
     const reglasci = /^\d+(-\d[A-Z])?$/;
     const reglascontrasenia = /^.{8,}$/;
@@ -75,15 +86,32 @@ function validarDatosSocio() {
     return errores;
 }
 
+function validarDatosCambiosPropiedad(){
+    const errores = [];
+    if (!socioCompra.value) {
+        errores.push('El socio comprador es obligatorio.');
+    }else if(socioCompra.value.code === socioVenta.value.code){
+        errores.push('El propietario es el mismo.');
+    }
+    if (!socioVenta.value) {
+        errores.push('El socio vendedor es obligatorio.');
+    }
+    if (!propiedadCambio.value) {
+        errores.push('La propiedad es obligatoria.');
+    }
+
+    return errores;
+}
+
 /*
     Validacion de datos - Registro Socio
 */
-function validarDatosPropiedad(){
+function validarDatosPropiedad() {
     const errores = [];
     const reglasTexto = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9.,\-]+([ ]+[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9.,\-]+)*$/;
     const reglasCodigoPropiedad = /^[a-zA-Z]+-\d+$/;
 
-    if(!socio.value){
+    if (!socio.value) {
         errores.push('El socio es requerido.');
     }
     if (!propiedad.value.id.trim()) {
@@ -102,10 +130,10 @@ function validarDatosPropiedad(){
     if (propiedad.value.total_multas_propiedad < -1) {
         errores.push('El total de multas de la propiedad es requerido.');
     }
-    if(!medidor.value.id_medidor){
+    if (!medidor.value.id_medidor) {
         errores.push('El codigo del medidor es requerido.');
     }
-    if(switchValue.value && !medidor.value.lectura){
+    if (switchValue.value && !medidor.value.lectura) {
         errores.push('La lectura del medidor es requerida.');
     }
     return errores;
@@ -171,7 +199,6 @@ async function registrarNuevaPropiedad() {
     const errores = validarDatosPropiedad();
     if (errores.length > 0) {
         toast.add({ severity: 'error', summary: 'Error en la validacion de los datos del socio', detail: errores.join(' '), life: 7000 });
-        modalRegistroNuevaPropiedad.value = false;
         return;
     }
     try {
@@ -200,12 +227,55 @@ async function registrarNuevaPropiedad() {
         await loadSocios();
         toast.add({ severity: 'success', summary: 'La propiedad fue registrada', detail: 'Se registro correctamente.', life: 5000 });
     } catch (error) {
-        cerrarModalRegistroPropiedad();
-        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar la propiedad', detail: error.message , life: 3000 });
+        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar la propiedad', detail: error.message, life: 3000 });
         console.error('Se produjo un error:', error.message);
     }
 }
 
+async function registrarCambioPropiedad() {
+    const errores = validarDatosCambiosPropiedad();
+    if (errores.length > 0) {
+        toast.add({ severity: 'error', summary: 'Error en la validacion, campos requeridos', detail: errores.join(' '), life: 7000 });
+        return;
+    }
+    try{
+        const data = {
+            socio_compra: socioCompra.value.code,
+            socio_venta: socioVenta.value.code,
+            propiedad: propiedadCambio.value.codigo_propiedad
+        };
+        console.log(data);
+        const response = await fetchRegistrarCambioPropiedad(data, token);
+        if(response.status){
+            toast.add({ severity: 'success', summary: 'Cambio de propiedad registrado', detail: 'Se registro correctamente.', life: 5000 });
+            cerrarModalCambioPropiedad();
+            await loadSocios();
+            socioCompra.value = null;
+            socioVenta.value = null;
+        }else{
+            throw new Error('Error al intentar registrar el cambio de propiedad.');
+        }
+        await loadSocios();
+    }catch(error){
+        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar la propiedad', detail: error.message, life: 3000 });
+        console.error('Se produjo un error:', error.message);
+    }
+}
+
+const codigoPropiedad = async (socioId) => {
+    try {
+        const response = await fetchListaPropiedades(socioId, token);
+        if (response && response.length > 0) {
+            propiedadesValues.value = response.map((propiedad) => ({
+                codigo_propiedad: propiedad.id
+            }));
+        } else {
+            propiedadesValues.value = null;
+        }
+    } catch (error) {
+        console.error('Se produjo un error:', error.message);
+    }
+};
 function abrirNuevoModalRegistroSocio() {
     modalRegistroNuevoSocio.value = true;
     socio.value = {
@@ -248,6 +318,29 @@ function cerrarModalRegistroPropiedad() {
     submitted.value = false;
     socio.value = null;
 }
+
+function abrirModalCambioPropiedad() {
+    obtenerSocios();
+    modalCambioPropiedad.value = true;
+    socio.value = {
+        nombre_socio: '',
+        primer_apellido_socio: '',
+        segundo_apellido_socio: '',
+        ci_socio: '',
+        username: '',
+        email: '',
+        contrasenia: '',
+        confirmar_contrasenia: ''
+    };
+}
+
+function cerrarModalCambioPropiedad() {
+    modalCambioPropiedad.value = false;
+    socioCompra.value = null;
+    socioVenta.value = null;
+    propiedadCambio.value = null;
+    submitted.value = false;
+}
 </script>
 
 <template>
@@ -258,7 +351,8 @@ function cerrarModalRegistroPropiedad() {
             <Toolbar class="mb-1">
                 <template #start>
                     <Button label="Registrar un nuevo socio" icon="pi pi-plus" severity="secondary" class="mr-2" @click="abrirNuevoModalRegistroSocio" />
-                    <Button label="Agregar una nueva propiedad" icon="pi pi-plus" severity="secondary" class="mr-2" @click="abrirNuevoModalRegistroPropiedad"></Button>
+                    <Button label="Agregar una nueva propiedad" icon="pi pi-plus" severity="secondary" class="mx-2" @click="abrirNuevoModalRegistroPropiedad"></Button>
+                    <Button label="Cambio de propietario" icon="pi pi-sync" severity="secondary" @click="abrirModalCambioPropiedad"></Button>
                 </template>
 
                 <template #end>
@@ -266,17 +360,7 @@ function cerrarModalRegistroPropiedad() {
                 </template>
             </Toolbar>
 
-            <DataTable
-            :value="socios"
-            rowGroupMode="subheader"
-            groupRowsBy="ci_socio"
-            sortMode="single"
-            sortField="nombre_socio"
-            :sortOrder="1"
-            scrollable
-            scrollHeight="590px"
-            tableStyle="min-width: 50rem"
-            >
+            <DataTable :value="socios" rowGroupMode="subheader" groupRowsBy="ci_socio" sortMode="single" sortField="nombre_socio" :sortOrder="1" scrollable scrollHeight="590px" tableStyle="min-width: 50rem">
                 <!-- Group header for each socio -->
                 <template #groupheader="slotProps">
                     <div class="p-2 flex items-center gap-2 mb-1">
@@ -435,6 +519,56 @@ function cerrarModalRegistroPropiedad() {
             <template #footer>
                 <Button label="Cancelar" icon="pi pi-times" text @click="cerrarModalRegistroPropiedad" />
                 <Button label="Guardar" icon="pi pi-check" @click="registrarNuevaPropiedad" />
+            </template>
+        </Dialog>
+
+        <Dialog v-model:visible="modalCambioPropiedad" :style="{ width: '500px' }" header="Cambio de propietario" :modal="true">
+            <div class="flex gap-6 mr-2">
+                <div>
+                    <label for="nombre" class="block font-bold mb-3">Nombre del propietario actual: </label>
+                    <Select v-model="socioVenta" :options="sociosListaBox" filter optionLabel="name" placeholder="Selecciona el nombre del socio" class="w-full" :invalid="socio === null" fluid>
+                        <template #value="slotProps">
+                            <div v-if="slotProps.value" class="flex items-center">
+                                <div>{{ slotProps.value.name }}</div>
+                            </div>
+                            <span v-else>
+                                {{ slotProps.placeholder }}
+                            </span>
+                        </template>
+                        <template #option="slotProps">
+                            <div class="flex items-center">
+                                <div>{{ slotProps.option.name }}</div>
+                            </div>
+                        </template>
+                    </Select>
+                </div>
+                <div>
+                    <label for="codigo_propiedad" class="block font-bold mb-3">Codigo de propiedad: </label>
+                    <Select v-model.trim="propiedadCambio" :options="propiedadesValues" optionLabel="codigo_propiedad" placeholder="Select" />
+                    <small v-if="submitted && !propiedadCambio" class="text-red-500">El campo es requerido.</small>
+                </div>
+            </div>
+            <div class="mt-5">
+                <label for="nombre" class="block font-bold mb-3">Nombre del nuevo propieatario: </label>
+                <Select v-model="socioCompra" :options="sociosListaBox" filter optionLabel="name" placeholder="Selecciona el nombre del socio" class="w-full" :invalid="socio === null" fluid>
+                    <template #value="slotProps">
+                        <div v-if="slotProps.value" class="flex items-center">
+                            <div>{{ slotProps.value.name }}</div>
+                        </div>
+                        <span v-else>
+                            {{ slotProps.placeholder }}
+                        </span>
+                    </template>
+                    <template #option="slotProps">
+                        <div class="flex items-center">
+                            <div>{{ slotProps.option.name }}</div>
+                        </div>
+                    </template>
+                </Select>
+            </div>
+            <template #footer>
+                <Button label="Cancelar" icon="pi pi-times" text @click="cerrarModalCambioPropiedad" />
+                <Button label="Guardar" icon="pi pi-check" @click="registrarCambioPropiedad" />
             </template>
         </Dialog>
     </div>

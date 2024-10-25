@@ -157,6 +157,12 @@ watch(socio, (newSocio, oldSocio) => {
 
 const socioHaCambiado = computed(() => socio.value !== socioOriginal);
 
+const totalPagoSeleccionados = computed(() => {
+    return pagoSeleccionados.value.reduce((total, pago) => {
+        return total + (pago.recibos?.total || 0);
+    }, 0);
+});
+
 /**
  * Peticiones a la API
  */
@@ -165,6 +171,7 @@ const socioHaCambiado = computed(() => socio.value !== socioOriginal);
 const loadRecibos = async () => {
     const listaRecibos = await fetchListaRecibos(token);
     if (listaRecibos) {
+        console.log(listaRecibos);
         recibos.value = listaRecibos;
     } else {
         console.error('No se pudo obtener la lista de recibos.');
@@ -181,7 +188,7 @@ async function guardarRecibo() {
             recibo.value.id_socio = socio.value.code;
             recibo.value.codigo_propiedad = recibo.value.codigo_propiedad.codigo_propiedad;
         }
-        const response = await fetchRegistrarNuevoRecibo(recibo.value , token);
+        const response = await fetchRegistrarNuevoRecibo(recibo.value, token);
         if (response.status === 200) {
             toast.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo guardado correctamente.', life: 5000 });
             hideDialog();
@@ -214,7 +221,7 @@ async function obtenerSocios() {
 // Peticion Get para obtener la lista de propiedades de un socio
 const codigoPropiedad = async (socioId) => {
     try {
-        const response = await fetchListaPropiedades(socioId ,token);
+        const response = await fetchListaPropiedades(socioId, token);
         if (response && response.length > 0) {
             propiedadesValues.value = response.map((propiedad) => ({
                 codigo_propiedad: propiedad.id
@@ -235,7 +242,7 @@ async function busquedaPropiedadSocio() {
             throw new Error('El campo de medidor es requerido.');
         }
         busquedaRealizada.value = true;
-        const response = await fetchBusquedaPropiedadSocio(id_medidor.value , token);
+        const response = await fetchBusquedaPropiedadSocio(id_medidor.value, token);
         console.log(response);
         if (recibo.value) {
             recibo.value = {
@@ -256,7 +263,7 @@ async function actualizaRecibo() {
         let fechaFormateada = recibo.value.mes_correspondiente.toISOString().slice(0, 10);
         recibo.value.mes_correspondiente = fechaFormateada;
         console.log(recibo.value);
-        const response = await fetchActualizarRecibo(recibo.value.id, recibo.value ,token);
+        const response = await fetchActualizarRecibo(recibo.value.id, recibo.value, token);
         console.log(response);
         if (response.status === 200) {
             toast.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo actualizado correctamente.', life: 5000 });
@@ -273,7 +280,7 @@ async function actualizaRecibo() {
 async function loadRecibosEndeudados() {
     try {
         console.log('Codigo de propiedad:', recibo.value.codigo_propiedad);
-        const response = await fetchRecibosEndeudados(recibo.value.codigo_propiedad , token);
+        const response = await fetchRecibosEndeudados(recibo.value.codigo_propiedad, token);
         if (response) {
             preavisoEndeudados.value = response;
             console.log(preavisoEndeudados.value);
@@ -286,15 +293,15 @@ async function loadRecibosEndeudados() {
 }
 
 // Funcion de registro de pago
-async function registrarPago(){
+async function registrarPago() {
     console.log(pagoSeleccionados.value);
-    const ids = pagoSeleccionados.value.map(item => item.recibos.id);
+    const ids = pagoSeleccionados.value.map((item) => item.recibos.id);
     console.log(ids);
 
     for (const id of ids) {
         try {
             const response = await fetchActualizarEstadoRecibo(id, token);
-            if(!response.status === 200){
+            if (!response.status === 200) {
                 throw new Error('No se pudo actualizar el estado del recibo.');
             }
             toast.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo actualizado estado pagado.', life: 5000 });
@@ -309,7 +316,6 @@ async function registrarPago(){
     cerraRegistroPago();
     await loadRecibos();
 }
-
 </script>
 <template>
     <div>
@@ -355,9 +361,10 @@ async function registrarPago(){
                 <Column field="codigo_propiedad" header="# Propiedad" sortable style="min-width: 10rem"></Column>
                 <Column field="fecha_lectura" header="Fecha de lectura" sortable style="min-width: 10rem"></Column>
                 <Column field="nombre_completo" header="Dueño" sortable style="min-width: 16rem"></Column>
-                <Column field="lectura_anterior" header="Lectura Anterior" style="min-width: 8rem"></Column>
-                <Column field="lectura_actual" header="Lectura Actual" style="min-width: 8rem"></Column>
+                <Column field="lectura_anterior_correspondiente" header="Lectura Anterior" style="min-width: 8rem"></Column>
+                <Column field="lectura_actual_correspondiente" header="Lectura Actual" style="min-width: 8rem"></Column>
                 <Column field="total" header="Total" style="min-width: 6rem"></Column>
+                <Column field="mes_correspondiente" header="Del mes :" sortable style="min-width: 10rem"></Column>
                 <Column field="estado_pago" header="Estado" style="min-width: 10rem">
                     <template #body="slotProps">
                         <Tag :value="slotProps.data.estado_pago == 1 ? 'Pagado' : 'Endeudado'" :severity="getEstadoLabel(slotProps.data.estado_pago)" />
@@ -366,8 +373,8 @@ async function registrarPago(){
                 <Column :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Button icon="pi pi-eye" outlined severity="info" rounded @click="abrir(slotProps.data)" />
-                        <Button icon="pi pi-pencil" outlined rounded class="mx-1" @click="editarRecibo(slotProps.data)" />
-                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteProduct(slotProps.data)" />
+                        <Button icon="pi pi-pencil" outlined rounded class="mx-1" @click="editarRecibo(slotProps.data)" :disabled="slotProps.data.estado_pago" />
+                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteProduct(slotProps.data)" :disabled="slotProps.data.estado_pago" />
                     </template>
                 </Column>
                 <Dialog v-model:visible="detallesRecibo" :breakpoints="{ '960px': '75vw' }" :style="{ width: '50vw' }" :modal="true">
@@ -438,14 +445,21 @@ async function registrarPago(){
                                         <SplitterPanel :size="70">
                                             <Splitter>
                                                 <SplitterPanel class="flex items-center justify-center p-3" :size="23"> Multas por vencimiento : </SplitterPanel>
-                                                <SplitterPanel class="flex items-center justify-center" :size="50"> Panel 4 </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center" :size="50"> <div></div> </SplitterPanel>
                                                 <SplitterPanel class="flex items-center justify-center p-3" :size="16"> <div></div> </SplitterPanel>
                                             </Splitter>
                                         </SplitterPanel>
                                         <SplitterPanel :size="70">
                                             <Splitter>
                                                 <SplitterPanel class="flex items-center justify-center p-3" :size="23"> Otras multas : </SplitterPanel>
-                                                <SplitterPanel class="flex items-center justify-center" :size="50"> Panel 4 </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center" :size="50">
+                                                    <div v-for="multa in detalleRecibo.multa_propiedad" :key="multa.id">
+                                                        <div class="text-center">
+                                                            <p>{{ multa.criterio_infraccion }}</p>
+                                                            <p>{{ multa.monto_infraccion }}</p>
+                                                        </div>
+                                                    </div>
+                                                </SplitterPanel>
                                                 <SplitterPanel class="flex items-center justify-center p-3" :size="16"><div></div></SplitterPanel>
                                             </Splitter>
                                         </SplitterPanel>
@@ -455,7 +469,7 @@ async function registrarPago(){
                                                     Cancelar: Nro. de Cuenta: 3051-969273 <br />
                                                     Banco La Promotora EFV</SplitterPanel
                                                 >
-                                                <SplitterPanel class="flex items-center justify-center" :size="20"> Panel 4 </SplitterPanel>
+                                                <SplitterPanel class="flex items-center justify-center" :size="20"> <div></div> </SplitterPanel>
                                             </Splitter>
                                         </SplitterPanel>
                                         <SplitterPanel :size="70">
@@ -647,9 +661,28 @@ async function registrarPago(){
                 </div>
             </div>
 
-            <div>
-                <label for="">Seleccionar pagos: </label>
-                <MultiSelect v-model="pagoSeleccionados" :disabled="!preavisoEndeudados" :options="preavisoEndeudados" filter optionLabel="mes_correspondiente" display="chip" placeholder="Seleccionar los meses que desea pagar." class="w-full" fluid/>
+            <div class="my-2">
+                <div class="my-2">
+                    <label for="pagos">Seleccionar pagos: </label>
+                </div>
+                <MultiSelect
+                    v-model="pagoSeleccionados"
+                    :disabled="!preavisoEndeudados"
+                    :options="preavisoEndeudados"
+                    filter
+                    optionLabel="mes_correspondiente"
+                    display="chip"
+                    placeholder="Seleccionar los meses que desea pagar."
+                    class="w-full"
+                    fluid
+                />
+            </div>
+
+            <div class="my-2">
+                <div class="my-2">
+                    <label for="total">Total a pagar: </label>
+                </div>
+                <InputText :value="totalPagoSeleccionados" disabled />
             </div>
 
             <template #footer>
