@@ -2,7 +2,7 @@
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
 import { onBeforeMount, onMounted, ref, watch, computed, toDisplayString } from 'vue';
-import { fetchListaRecibos, fetchListaSocios, fetchListaPropiedades, fetchBusquedaPropiedadSocio, fetchRecibosEndeudados } from '@/service/peticionesApi';
+import { fetchListaRecibos, fetchListaSocios, fetchListaPropiedades, fetchBusquedaPropiedadSocio, fetchRecibosEndeudados, fetchImprimiRecibo } from '@/service/peticionesApi';
 import { fetchRegistrarNuevoRecibo } from '@/service/PeticionesApiPost';
 import { fetchActualizarRecibo, fetchActualizarEstadoRecibo } from '@/service/PeticionesApiPut';
 import { useStore } from 'vuex';
@@ -316,6 +316,12 @@ async function registrarPago() {
     cerraRegistroPago();
     await loadRecibos();
 }
+
+async function descarga() {
+    console.log('Descargar PDF');
+    await fetchImprimiRecibo(detalleRecibo.value.id, token);
+}
+
 </script>
 <template>
     <div>
@@ -496,7 +502,7 @@ async function registrarPago() {
                     <template #footer>
                         <div class="flex">
                             <Button class="mx-2" label="Cerrar" @click="close" severity="secondary" outlined />
-                            <Button icon="pi pi-print" label="Descargar" @click="close" severity="info" outlined />
+                            <Button icon="pi pi-print" label="Descargar" @click="descarga" severity="info" outlined />
                         </div>
                     </template>
                 </Dialog>

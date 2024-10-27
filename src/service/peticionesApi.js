@@ -1,4 +1,3 @@
-
 const url = 'http://127.0.0.1:8000/api';
 
 /**
@@ -114,7 +113,7 @@ export async function fetchListaMultasActivas(token) {
  * Petición GET para obtener la lista de propiedades de un socio.
  * @returns {Promise<Array>}
  */
-export async function fetchListaPropiedades(socioId ,token) {
+export async function fetchListaPropiedades(socioId, token) {
     try {
         const response = await fetch(`${url}/propiedades/socio/${socioId}`, {
             headers: {
@@ -137,7 +136,7 @@ export async function fetchListaPropiedades(socioId ,token) {
  * @returns {Promise<Array>}
  */
 
-export async function fetchGuardarMulta(datos , token) {
+export async function fetchGuardarMulta(datos, token) {
     try {
         const data = {
             propiedad_id: datos.id_propiedad,
@@ -169,7 +168,7 @@ export async function fetchGuardarMulta(datos , token) {
  * @returns {Promise<Array>}
  */
 
-export async function fetchRegistrarMulta(data , token) {
+export async function fetchRegistrarMulta(data, token) {
     try {
         const response = await fetch(`${url}/multas`, {
             method: 'POST',
@@ -195,7 +194,7 @@ export async function fetchRegistrarMulta(data , token) {
  * @returns {Promise<Array>}
  */
 
-export async function fetchActualizacionMulta(idMulta, multa , token) {
+export async function fetchActualizacionMulta(idMulta, multa, token) {
     try {
         const response = await fetch(`${url}/multas/${idMulta}`, {
             method: 'PUT',
@@ -216,7 +215,7 @@ export async function fetchActualizacionMulta(idMulta, multa , token) {
     }
 }
 
-export async function fetchBusquedaPropiedadSocio(id_medidor ,token) {
+export async function fetchBusquedaPropiedadSocio(id_medidor, token) {
     try {
         const response = await fetch(`${url}/busqueda-medidor/propiedades/${id_medidor}`, {
             headers: {
@@ -252,11 +251,11 @@ export async function fetchListaMantenimientos(token) {
     }
 }
 
-export async function fetchRecibosEndeudados(id , token) {
+export async function fetchRecibosEndeudados(id, token) {
     try {
         const response = await fetch(`${url}/endeudados/recibos/${id.codigo_propiedad}`, {
             headers: {
-                'Authorization' : `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -274,7 +273,7 @@ export async function fetchSolicitudCantidadSocios(token) {
     try {
         const response = await fetch(`${url}/cantidad/socios`, {
             headers: {
-                'Authorization' : `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -292,7 +291,7 @@ export async function fetchSolicitudCantidadPropiedades(token) {
     try {
         const response = await fetch(`${url}/cantidad/propiedades`, {
             headers: {
-                'Authorization' : `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -310,7 +309,7 @@ export async function fetchSolicitudCantidadPreAvisosPagados(token) {
     try {
         const response = await fetch(`${url}/cantidad/recibos/pagados`, {
             headers: {
-                'Authorization' : `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -328,7 +327,7 @@ export async function fetchSolicitudCantidadPreAvisosEndeudados(token) {
     try {
         const response = await fetch(`${url}/cantidad/recibos/pendientes`, {
             headers: {
-                'Authorization' : `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             }
         });
         if (!response.ok) {
@@ -339,5 +338,33 @@ export async function fetchSolicitudCantidadPreAvisosEndeudados(token) {
     } catch (error) {
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    }
+}
+
+export async function fetchImprimiRecibo(id, token) {
+    try {
+        const response = await fetch(`${url}/generar/recibo/pdf/${id}`, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/pdf',
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al generar el recibo PDF');
+        }
+
+        const blob = await response.blob();
+        const objectUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.setAttribute('download', `recibo_${id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+        console.error('Error al generar el recibo PDF:', error);
     }
 }
