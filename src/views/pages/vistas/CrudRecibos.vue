@@ -29,7 +29,6 @@ const recibo = ref({
 const sociosListaBox = ref([]);
 const socio = ref(null);
 const propiedadesValues = ref([]);
-const recibosSeleccionados = ref();
 const submitted = ref(false);
 const id_medidor = ref(null);
 const nombreSocio = ref('');
@@ -42,7 +41,8 @@ const detalleRecibo = ref({});
 const modalRegistroPago = ref(false);
 const preavisoEndeudados = ref([]);
 const pagoSeleccionados = ref([]);
-
+const loading = ref(false);
+const loadingPago = ref(false);
 let socioOriginal = null;
 let cambio = false;
 
@@ -68,13 +68,6 @@ function deleteProduct() {
 
 function confirmDeleteSelected() {
     deleteProductsDialog.value = true;
-}
-
-function deleteSelectedProducts() {
-    products.value = products.value.filter((val) => !recibosSeleccionados.value.includes(val));
-    deleteProductsDialog.value = false;
-    recibosSeleccionados.value = null;
-    toast.add({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
 }
 
 // Funcion para status recibo (pagado o endeudado)
@@ -182,6 +175,9 @@ onBeforeMount(loadRecibos);
 
 // Peticion Post para guardar recibo
 async function guardarRecibo() {
+    if (loading.value) return;
+    loading.value = true;
+
     try {
         submitted.value = true;
         if (!busquedaRealizada.value && !switchValor.value) {
@@ -190,8 +186,8 @@ async function guardarRecibo() {
         }
         const response = await fetchRegistrarNuevoRecibo(recibo.value, token);
         if (response.status === 200) {
-            toast.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo guardado correctamente.', life: 5000 });
             hideDialog();
+            toast.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo guardado correctamente.', life: 5000 });
             if (busquedaRealizada) {
                 busquedaRealizada.value = false;
             }
@@ -201,6 +197,8 @@ async function guardarRecibo() {
         }
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Falla al registrar el recibo', detail: 'No se almaceno el recibo', life: 5000 });
+    } finally{
+        loading.value = false;
     }
 }
 
@@ -294,25 +292,27 @@ async function loadRecibosEndeudados() {
 
 // Funcion de registro de pago
 async function registrarPago() {
-    console.log(pagoSeleccionados.value);
+    if (loadingPago.value) return;
+    loadingPago.value = true;
     const ids = pagoSeleccionados.value.map((item) => item.recibos.id);
-    console.log(ids);
-
     for (const id of ids) {
         try {
             const response = await fetchActualizarEstadoRecibo(id, token);
             if (!response.status === 200) {
                 throw new Error('No se pudo actualizar el estado del recibo.');
             }
-            toast.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo actualizado estado pagado.', life: 5000 });
+            toast.add({ severity: 'success', summary: 'Éxito', detail: 'Registro pago exito.', life: 5000 });
         } catch (error) {
             toast.add({ severity: 'error', summary: 'Falla al actualizar el recibo', detail: 'No pudo actualizar el pago', life: 5000 });
             console.error('Se produjo un error:', error.message);
+        }finally{
+            loadingPago.value = false;
         }
     }
     pagoSeleccionados.value = [];
     preavisoEndeudados.value = [];
     propiedadesValues.value = [];
+    // Llamar a un metodo que mande el recibo del pago realizado
     cerraRegistroPago();
     await loadRecibos();
 }
@@ -330,17 +330,11 @@ async function descarga() {
                 <template #start>
                     <Button label="Registrar nuevo recibo" icon="pi pi-plus" severity="secondary" @click="openNew" />
                     <Button label="Registrar nuevo pago" icon="pi pi-dollar" severity="secondary" class="mx-4" @click="abrirNuevoPago" />
-                    <Button label="Eliminar" icon="pi pi-trash" severity="secondary" @click="confirmDeleteSelected" :disabled="!recibosSeleccionados || !recibosSeleccionados.length" />
-                </template>
-
-                <template #end>
-                    <Button label="Generar PDF" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" />
                 </template>
             </Toolbar>
 
             <DataTable
                 ref="dt"
-                v-model:selection="recibosSeleccionados"
                 :value="recibos"
                 dataKey="id"
                 :paginator="true"
@@ -592,8 +586,8 @@ async function descarga() {
             </div>
 
             <template #footer>
-                <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
-                <Button label="Guardar" icon="pi pi-check" @click="guardarRecibo" />
+                <Button label="Cancelar" icon="pi pi-times" :disabled="loading" text @click="hideDialog" />
+                <Button label="Guardar" icon="pi pi-check" :disabled="loading" @click="guardarRecibo" />
             </template>
         </Dialog>
 
@@ -635,7 +629,7 @@ async function descarga() {
             </template>
         </Dialog>
 
-        <Dialog v-model:visible="modalRegistroPago" :style="{ width: '350px' }" header="Actualizar pre-aviso" :modal="true">
+        <Dialog v-model:visible="modalRegistroPago" :style="{ width: '350px' }" header="Registro de pago" :modal="true">
             <div class="flex flex-col gap-6">
                 <div class="py-3 grid">
                     <label for="socio_id" class="block font-bold mb-3 mr-3">Realize la busqueda del nombre del socio: </label>
@@ -692,8 +686,8 @@ async function descarga() {
             </div>
 
             <template #footer>
-                <Button label="Cancelar" icon="pi pi-times" text @click="cerraRegistroPago" />
-                <Button label="Registrar pago" icon="pi pi-check" @click="registrarPago" />
+                <Button label="Cancelar" icon="pi pi-times" :disabled="loadingPago" text @click="cerraRegistroPago" />
+                <Button label="Registrar pago" icon="pi pi-check" :disabled="loadingPago" @click="registrarPago" />
             </template>
         </Dialog>
 

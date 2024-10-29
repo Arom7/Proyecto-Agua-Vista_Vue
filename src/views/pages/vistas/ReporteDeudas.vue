@@ -17,17 +17,17 @@ const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
 
-async function load() {
+async function load(eventoPDF) {
     loading.value = true;
-    await listaSocioRecibos();
+    await listaSocioRecibos(eventoPDF);
     setTimeout(() => (loading.value = false), 1000);
 }
 
 //Funciones para la carga de datos de socios y recibos
-async function listaSocioRecibos() {
+async function listaSocioRecibos(evento) {
     const fechaInicioFormatted = fechaInicio.value.toISOString().slice(0, 10);
     const fechaFinFormatted = fechaFin.value.toISOString().slice(0, 10);
-    const listaSocios = await fetchListaSociosDeudas(fechaInicioFormatted, fechaFinFormatted, token);
+    const listaSocios = await fetchListaSociosDeudas(fechaInicioFormatted, fechaFinFormatted, evento , token);
     if (listaSocios) {
         sociosRecibos.value = listaSocios;
     } else {
@@ -46,6 +46,10 @@ function getEstadoLabel(status) {
             return null;
     }
 }
+
+function exportarPDFReporte() {
+    console.log('Exportar a PDF');
+}
 </script>
 
 <template>
@@ -61,8 +65,13 @@ function getEstadoLabel(status) {
                     <div class="font-semibold text-xm my-2">Fecha final :</div>
                     <DatePicker id="fechaFin" class="mb-1" v-model="fechaFin" :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd" :manualInput="false"></DatePicker>
 
-                    <Button type="button" class="mr-3 mb-1" label="Search" icon="pi pi-search" iconPos="right" :loading="loading" @click="load()" />
+                    <Button type="button" class="mr-3 mb-1" label="Search" icon="pi pi-search" iconPos="right" :loading="loading" @click="load(0)" />
                 </div>
+            </div>
+        </template>
+        <template #end>
+            <div>
+                <Button label="Exportar a PDF" icon="pi pi-file-pdf" class="p-button-success mr-10" @click="load(1)"/>
             </div>
         </template>
     </Toolbar>

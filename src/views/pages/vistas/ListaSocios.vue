@@ -354,10 +354,6 @@ function cerrarModalCambioPropiedad() {
                     <Button label="Agregar una nueva propiedad" icon="pi pi-plus" severity="secondary" class="mx-2" @click="abrirNuevoModalRegistroPropiedad"></Button>
                     <Button label="Cambio de propietario" icon="pi pi-sync" severity="secondary" @click="abrirModalCambioPropiedad"></Button>
                 </template>
-
-                <template #end>
-                    <Button label="Imprimir PDF" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" />
-                </template>
             </Toolbar>
 
             <DataTable :value="socios" rowGroupMode="subheader" groupRowsBy="ci_socio" sortMode="single" sortField="nombre_socio" :sortOrder="1" scrollable scrollHeight="590px" tableStyle="min-width: 50rem">

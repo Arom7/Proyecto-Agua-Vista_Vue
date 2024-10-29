@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeMount } from 'vue';
 import { FilterMatchMode } from '@primevue/core/api';
 import { useToast } from 'primevue/usetoast';
-import { fetchListaMantenimientos } from '@/service/peticionesApi';
+import { fetchListaMantenimientos , fetchReporteMantenimientos} from '@/service/peticionesApi';
 import { fetchRegistrarNuevoMantenimiento } from '@/service/PeticionesApiPost';
 import { fetchActualizarMantenimiento } from '@/service/PeticionesApiPut';
 import {useStore} from 'vuex';
@@ -144,6 +144,10 @@ async function editarMantenimiento(data) {
     modalRegistroMantenimiento.value = true;
 }
 
+function imprimirReportePDF() {
+    fetchReporteMantenimientos(token);
+}
+
 </script>
 <template>
     <div>
@@ -154,7 +158,7 @@ async function editarMantenimiento(data) {
                 </template>
 
                 <template #end>
-                    <Button label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" />
+                    <Button label="Descargar PDF" icon="pi pi-upload" severity="secondary" @click="imprimirReportePDF" />
                 </template>
             </Toolbar>
 

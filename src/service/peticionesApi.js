@@ -368,3 +368,31 @@ export async function fetchImprimiRecibo(id, token) {
         console.error('Error al generar el recibo PDF:', error);
     }
 }
+
+export async function fetchReporteMantenimientos(token) {
+    try {
+        const response = await fetch(`${url}/generar/reporte/mantenimiento/PDF`, {
+            method: 'GET',
+            headers: {
+                Accept: 'application/pdf',
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al generar el recibo PDF');
+        }
+
+        const blob = await response.blob();
+        const objectUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.setAttribute('download', `reporte_mantenimientos.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+        console.error('Error al generar el recibo PDF:', error);
+    }
+}
