@@ -6,7 +6,11 @@ import { onBeforeMount, watch, ref } from 'vue';
 
 const token = localStorage.getItem('authToken');
 const multas = ref();
-const multa = ref({});
+const multa = ref({
+    criterio_infraccion: '',
+    descripcion_infraccion: '',
+    monto_infraccion: null
+});
 const socio = ref({});
 const propiedad = ref({});
 const modalRegistroMultaSocio = ref(false);
@@ -19,10 +23,9 @@ const selectedSocio = ref(null);
 const selectedMulta = ref(null);
 const modalEliminacionMulta = ref(false);
 let idMulta;
-
+const loading = ref(false);
 const toast = useToast();
 const dt = ref();
-const products = ref();
 
 const deleteProductsDialog = ref(false);
 const product = ref({});
@@ -45,10 +48,6 @@ function eliminarMulta(datos) {
 
 function deleteMulta() {
     //Aun falta desarrollar el backend para eliminar una multa
-}
-
-function exportCSV() {
-    dt.value.exportCSV();
 }
 
 function confirmDeleteSelected() {
@@ -92,6 +91,7 @@ watch(socio, (newSocio) => {
 //apertura del modal
 function registrarNuevaMulta() {
     submitted.value = false;
+    multa.value = {};
     actualizacionMulta.value = false;
     modalRegistroMulta.value = true;
 }
@@ -110,6 +110,9 @@ function cerrarModal() {
 }
 
 function registrarMultaSocio() {
+    socio.value = null;
+    multa.value = null;
+    propiedad.value = {};
     asignarSocios();
     asignarMultas();
     modalRegistroMultaSocio.value = true;
@@ -196,6 +199,9 @@ async function registrarMulta() {
         toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar la multa', detail: error.message, life: 3000 });
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
+    } finally {
+        submitted.value = false;
+        multa.value = null;
     }
 }
 
@@ -245,20 +251,33 @@ async function actualizarMulta() {
  * Funcion para agregar una multa a una propiedad de un socio
  */
 async function registrarMultaPropiedadSocio() {
+    if (loading.value) return;
+    loading.value = true;
+
     try {
+        console.log(socio.value);
+        submitted.value = true;
+        if (!socio.value || !multa.value || !propiedad.value) {
+            throw new Error('Los campos son requeridos.');
+        }
         const data = {
             id_multa: multa.value.code,
             id_propiedad: propiedad.value.code
         };
         const respuesta = await fetchGuardarMulta(data, token);
-        if (respuesta.status !== 200) {
+        console.log(respuesta.value);
+        if (!respuesta.status || respuesta == null) {
             throw new Error('Error al intentar registrar la multa al propietario');
         }
+        toast.add({ severity: 'success', summary: 'Multa registrada', detail: 'La multa fue registrada a la propiedad con exito', life: 3000 });
         cerrarModal();
     } catch (error) {
+        toast.add({ severity: 'error', summary: 'Ups!, no se pudo realizar el registro.', detail: error.message, life: 5000 });
         console.error('Se produjo un error:', error.message);
         errorMessage.value = 'Se produjo un error al intentar almacenar los datos.';
-        toast.add({ severity: 'error', summary: 'Ups, sucedio un error a la hora de registrar el socio', detail: error.message, life: 3000 });
+    } finally {
+        submitted.value = false;
+        loading.value = false;
     }
 }
 </script>
@@ -270,10 +289,6 @@ async function registrarMultaPropiedadSocio() {
                 <template #start>
                     <Button label="Registrar nueva multa" icon="pi pi-plus" severity="secondary" class="mr-2" @click="registrarNuevaMulta" />
                     <Button label="Agregar multa a una propiedad" icon="pi pi-plus" severity="secondary" class="mr-2" @click="registrarMultaSocio"></Button>
-                </template>
-
-                <template #end>
-                    <Button label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV($event)" />
                 </template>
             </Toolbar>
 
@@ -316,7 +331,6 @@ async function registrarMultaPropiedadSocio() {
                     <template #body="slotProps">
                         <Button icon="pi pi-power-off" severity="info" outlined rounded @click="actualizarEstadoMulta(slotProps.data)" />
                         <Button icon="pi pi-pencil" outlined rounded class="mx-2" @click="editarMulta(slotProps.data)" />
-
                     </template>
                 </Column>
             </DataTable>
@@ -326,17 +340,17 @@ async function registrarMultaPropiedadSocio() {
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="criterio_infraccion" class="block font-bold mb-3">Infraccion : </label>
-                    <InputText id="criterio_infraccion" v-model.trim="multa.criterio_infraccion" required="true" autofocus :invalid="submitted && !multa.criterio_infraccion" fluid />
+                    <InputText id="criterio_infraccion" v-model.trim="multa.criterio_infraccion" required="true" autofocus fluid placeholder="Se aceptan valores alfanumericos y algunos signos." />
                     <small v-if="submitted && !multa.criterio_infraccion" class="text-red-500">Este campos es requerido.</small>
                 </div>
                 <div>
                     <label for="description_infraccion" class="block font-bold mb-3">Description de la infraccion : </label>
-                    <Textarea id="descripcion_infraccion" v-model.trim="multa.descripcion_infraccion" required="true" rows="3" cols="20" fluid />
-                    <small v-if="submitted && !multa.descripcion_infraccion" class="text-red-500">Las razones de la multa es requerida.</small>
+                    <Textarea id="descripcion_infraccion" v-model.trim="multa.descripcion_infraccion" required="true" rows="2" cols="20" fluid placeholder="Se aceptan valores alfanumericos y algunos signos." />
+                    <small v-if="submitted && !multa.descripcion_infraccion" class="text-red-500">La descripcion de la multa es requerida.</small>
                 </div>
                 <div class="col-span-6">
                     <label for="monto_infraccion" class="block font-bold mb-3">Monto total de pago : </label>
-                    <InputNumber id="monto_infraccion" v-model.trim="multa.monto_infraccion" fluid />
+                    <InputNumber id="monto_infraccion" v-model.trim="multa.monto_infraccion" placeholder="Solo se aceptan valores numericos." fluid />
                     <small v-if="submitted && !multa.monto_infraccion" class="text-red-500">El El monto es requerida.</small>
                 </div>
             </div>
@@ -365,11 +379,11 @@ async function registrarMultaPropiedadSocio() {
                             </div>
                         </template>
                     </Select>
-                    <small v-if="submitted && !socio" class="text-red-500">El socio es requerido.</small>
+                    <small v-if="submitted && !socio.id" class="text-red-500">El socio es requerido.</small>
                 </div>
                 <div>
                     <label for="description_infraccion" class="block font-bold mb-3">Lista de infracciones : </label>
-                    <Select v-model="multa" :options="multasListaBox" filter optionLabel="criterio_infraccion" placeholder="Selecciona el nombre del socio" class="w-full" :invalid="multa === null" fluid>
+                    <Select v-model="multa" :options="multasListaBox" filter optionLabel="criterio_infraccion" placeholder="Selecciona la infraccion." class="w-full" :invalid="multa === null" fluid>
                         <template #value="slotProps">
                             <div v-if="slotProps.value" class="flex items-center">
                                 <div>{{ slotProps.value.criterio_infraccion }}</div>
@@ -393,7 +407,7 @@ async function registrarMultaPropiedadSocio() {
             </div>
             <template #footer>
                 <Button label="Cancelar" icon="pi pi-times" text @click="cerrarModal" />
-                <Button label="Guardar" icon="pi pi-check" @click="registrarMultaPropiedadSocio" />
+                <Button label="Guardar" icon="pi pi-check" @click="registrarMultaPropiedadSocio" :disabled="loading" />
             </template>
         </Dialog>
 

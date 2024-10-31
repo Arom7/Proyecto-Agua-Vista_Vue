@@ -487,11 +487,11 @@ function cerrarModalCambioPropiedad() {
                 <div class="flex gap-10">
                     <div>
                         <label for="cuadra_propiedad" class="block font blod mb-3">Codigo de propiedad : </label>
-                        <InputText v-model="propiedad.id" mode="decimal"></InputText>
+                        <InputText v-model="propiedad.id" mode="decimal" placeholder="A-1 , B-14 , C-15"></InputText>
                     </div>
                     <div>
                         <label for="id_propiedad" class="block font blod mb-3"> Acumulacion de multas : </label>
-                        <InputNumber v-model="propiedad.total_multas_propiedad" placeholder="Ingrese el codigo de propiedad." :min="0" fluid />
+                        <InputNumber v-model="propiedad.total_multas_propiedad" :min="0" fluid />
                     </div>
                 </div>
                 <div class="flex gap-12 text-center">

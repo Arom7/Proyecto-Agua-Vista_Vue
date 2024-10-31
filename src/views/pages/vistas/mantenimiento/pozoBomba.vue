@@ -5,6 +5,7 @@ import { useToast } from 'primevue/usetoast';
 import { fetchListaMantenimientos , fetchReporteMantenimientos} from '@/service/peticionesApi';
 import { fetchRegistrarNuevoMantenimiento } from '@/service/PeticionesApiPost';
 import { fetchActualizarMantenimiento } from '@/service/PeticionesApiPut';
+import { fetchEliminarMantenimiento } from '@/service/peticionesDelete';
 import {useStore} from 'vuex';
 
 const token = localStorage.getItem('authToken');
@@ -19,7 +20,7 @@ const tipoEquipo = ref([
     { label: 'Pozo de Agua', value: 'pozo' },
     { label: 'Bomba de agua', value: 'bomba' }
 ]);
-
+const modalEliminacionMantenimiento = ref(false);
 let idMantenimiento = null;
 
 const tipoMantenimiento = ref([
@@ -148,6 +149,23 @@ function imprimirReportePDF() {
     fetchReporteMantenimientos(token);
 }
 
+async function confirmacionEliminacionMantenimiento(data) {
+    mantenimiento.value = data;
+    modalEliminacionMantenimiento.value = true;
+}
+
+async function eliminacionMantenimiento(){
+    let id = mantenimiento.value.id;
+    const response = await fetchEliminarMantenimiento(id, token);
+    if (response.status) {
+        toast.add({ severity: 'success', summary: 'Exito', detail: 'Datos del mantenimiento eliminados correctamente.', life: 5000 });
+        modalEliminacionMantenimiento.value = false;
+        await loadMantenimietos();
+    } else {
+        toast.add({ severity: 'error', summary: 'Falla al eliminar el mantenimiento', detail: 'Se registro problemas para eliminar el mantenimiento', life: 5000 });
+    }
+}
+
 </script>
 <template>
     <div>
@@ -200,7 +218,7 @@ function imprimirReportePDF() {
                 <Column :exportable="false" style="min-width: 12rem">
                     <template #body="slotProps">
                         <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="editarMantenimiento(slotProps.data)" />
-                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmDeleteProduct(slotProps.data)" />
+                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="confirmacionEliminacionMantenimiento(slotProps.data)" />
                     </template>
                 </Column>
             </DataTable>
@@ -268,6 +286,20 @@ function imprimirReportePDF() {
             <template #footer>
                 <Button label="Cancel" icon="pi pi-times" text @click="cancelarRegistro" />
                 <Button label="Save" icon="pi pi-check" @click="guardarMantenimiento" />
+            </template>
+        </Dialog>
+
+        <Dialog v-model:visible="modalEliminacionMantenimiento" :style="{ width: '450px' }" header="Confirmacion" :modal="true">
+            <div class="flex items-center gap-4">
+                <i class="pi pi-exclamation-triangle !text-3xl" />
+                <span v-if="mantenimiento"
+                    >Estas seguro de eliminar el mantenimiento con el siguiente nro.  <b>{{ mantenimiento.id }}</b
+                    >?</span
+                >
+            </div>
+            <template #footer>
+                <Button label="No" icon="pi pi-times" text @click="modalEliminacionMantenimiento = false" />
+                <Button label="Yes" icon="pi pi-check" @click="eliminacionMantenimiento" />
             </template>
         </Dialog>
     </div>

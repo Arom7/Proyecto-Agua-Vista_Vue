@@ -61,7 +61,6 @@ function close() {
 </script>
 
 <template>
-    <FloatingConfigurator />
     <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden">
         <div class="flex flex-col items-center justify-center">
             <div style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
@@ -88,10 +87,6 @@ function close() {
                         <label for="contrasenia" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Contraseña</label>
                         <Password id="contrasenia" v-model="contrasenia" placeholder="Ingrese su contraseña" :toggleMask="true" class="mb-4" fluid :feedback="false"></Password>
                         <div class="flex items-center justify-between mt-2 mb-8 gap-8">
-                            <div class="flex items-center">
-                                <Checkbox v-model="checked" id="rememberme1" binary class="mr-2"></Checkbox>
-                                <label for="rememberme1">Remember me</label>
-                            </div>
                             <Button as="router-link" label="¿Olvidaste tu contraseña?" to="/auth/reseteo/email" text raised/>
                         </div>
                         <Toast />
@@ -99,7 +94,7 @@ function close() {
                         <Dialog header="Cuidado!" v-model:visible="display" :breakpoints="{ '960px': '75vw' }" :style="{ width: '30vw' , border: '1px solid red'}" :modal="true">
                             <i class="pi pi-exclamation-triangle mr-1" style="font-size: 2rem" />
                             <span>
-                                Ocurrio un error al iniciar sesion, verifica si tu username, correo electronico y la contraseña sean los correctos.
+                                Ocurrio un error al iniciar sesion, verifica si tu username o correo electronico y la contraseña sean los correctos.
                             </span>
                             <template #footer>
                                 <Button icon="pi pi-times" label="Cerrar" @click="close" severity="danger" />

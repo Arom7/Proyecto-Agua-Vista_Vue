@@ -12,10 +12,6 @@ const store = useStore();
 const router = useRouter();
 const items = ref([
     {
-        label: 'Actualizar Perfil',
-        icon: 'pi pi-refresh'
-    },
-    {
         label: 'Home',
         icon: 'pi pi-home',
         command:()=>{
